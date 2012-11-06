@@ -59,7 +59,7 @@ public class UpdateThread extends AbstractXWikiRunnable
     public UpdateThread(String space, boolean fullContent, int scheduleTimer, FeedPlugin feedPlugin,
         XWikiContext context)
     {
-        super(XWikiContext.EXECUTIONCONTEXT_KEY, context);
+        super(XWikiContext.EXECUTIONCONTEXT_KEY, context.clone());
         
         this.fullContent = fullContent;
         this.space = space;
