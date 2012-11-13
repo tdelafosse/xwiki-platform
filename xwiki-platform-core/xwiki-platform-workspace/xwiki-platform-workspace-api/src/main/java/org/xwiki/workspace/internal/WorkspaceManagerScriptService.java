@@ -28,12 +28,13 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.context.Execution;
-import org.xwiki.model.internal.scripting.ModelScriptService;
 import org.xwiki.model.reference.DocumentReference;
+import org.xwiki.model.reference.DocumentReferenceResolver;
+import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.workspace.Workspace;
-import org.xwiki.workspace.WorkspaceManager;
 import org.xwiki.workspace.WorkspaceException;
+import org.xwiki.workspace.WorkspaceManager;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.plugin.wikimanager.doc.XWikiServer;
@@ -64,10 +65,18 @@ public class WorkspaceManagerScriptService implements ScriptService
     @Inject
     private Logger logger;
 
-    /** ModelScriptService component. */
+    /**
+     * User to parse a document reference.
+     */
     @Inject
-    @Named("model")
-    private ScriptService modelScriptService;
+    @Named("current")
+    private DocumentReferenceResolver<String> currentResolver;
+
+    /**
+     * Used to serialize a document reference.
+     */
+    @Inject
+    private EntityReferenceSerializer<String> defaultSerializer;
 
     /** @return the wrapped component */
     WorkspaceManager getManager()
@@ -119,8 +128,7 @@ public class WorkspaceManagerScriptService implements ScriptService
 
         try {
             if (!canCreateWorkspace(getXWikiContext().getUser(), workspaceName)) {
-                throw new WorkspaceException(String.format("Access denied to create the workspace [%s]",
-                    workspaceName));
+                throw new WorkspaceException(String.format("Access denied to create the workspace [%s]", workspaceName));
             }
 
             /* Avoid "traps" by making sure the page from where this is executed has PR. */
@@ -153,8 +161,8 @@ public class WorkspaceManagerScriptService implements ScriptService
 
             /* Check rights. */
             if (!canDeleteWorkspace(currentUser, workspaceName)) {
-                throw new WorkspaceException(String.format(
-                    "Access denied for user [%s] to delete the workspace [%s]", currentUser, workspaceName));
+                throw new WorkspaceException(String.format("Access denied for user [%s] to delete the workspace [%s]",
+                    currentUser, workspaceName));
             }
 
             /* Avoid "traps" by making sure the page from where this is executed has PR. */
@@ -185,8 +193,8 @@ public class WorkspaceManagerScriptService implements ScriptService
 
             /* Check rights. */
             if (!canEditWorkspace(currentUser, workspaceName)) {
-                throw new WorkspaceException(String.format(
-                    "Access denied for user '%s' to edit the workspace '%s'", currentUser, workspaceName));
+                throw new WorkspaceException(String.format("Access denied for user '%s' to edit the workspace '%s'",
+                    currentUser, workspaceName));
             }
 
             /* Avoid "traps" by making sure the page from where this is executed has PR. */
@@ -213,8 +221,8 @@ public class WorkspaceManagerScriptService implements ScriptService
             return userName;
         }
 
-        DocumentReference userReference = ((ModelScriptService) modelScriptService).resolveDocument(userName);
-        String prefixedUserName = ((ModelScriptService) modelScriptService).serialize(userReference);
+        DocumentReference userReference = this.currentResolver.resolve(userName);
+        String prefixedUserName = this.defaultSerializer.serialize(userReference);
 
         return prefixedUserName;
     }
