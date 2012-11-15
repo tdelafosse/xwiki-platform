@@ -21,7 +21,7 @@ package org.xwiki.extension.xar.internal.handler.packager;
 
 import java.util.Locale;
 
-import org.xwiki.model.EntityType;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.xwiki.model.reference.EntityReference;
 
 /**
@@ -38,13 +38,6 @@ public class XarEntry
 
     public XarEntry()
     {
-    }
-
-    public XarEntry(String space, String page, Locale locale)
-    {
-        this.documentReference =
-            new EntityReference(page, EntityType.DOCUMENT, new EntityReference(space, EntityType.SPACE));
-        this.locale = locale;
     }
 
     public XarEntry(EntityReference documentReference, Locale locale)
@@ -88,13 +81,13 @@ public class XarEntry
     @Override
     public String toString()
     {
-        return this.documentReference + ", language = [" + getLocale() + "]";
+        return String.format("%s (%s)", getDocumentReference(), getLocale());
     }
 
     @Override
     public int hashCode()
     {
-        return toString().hashCode();
+        return new HashCodeBuilder().append(getDocumentReference()).append(getLocale()).toHashCode();
     }
 
     @Override

@@ -17,29 +17,30 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.xwiki.extension.xar.internal.script;
-
-import javax.inject.Inject;
-import javax.inject.Provider;
-
-import org.xwiki.extension.internal.safe.ScriptSafeProvider;
-
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.doc.XWikiDocument;
+package org.xwiki.extension.xar.internal.util;
 
 /**
+ * Various XAR extension type related utility methods.
+ * 
  * @version $Id$
- * @since 4.0M2
+ * @since 4.3RC1
  */
-// TODO: Move this to oldcore when ScriptSafeProvider is to a public package
-public class DocumentScriptSafeProvider implements ScriptSafeProvider<XWikiDocument>
+public final class XarExtensionUtils
 {
-    @Inject
-    private Provider<XWikiContext> xcontextProvider;
+    /**
+     * The prefix used to indicate that an extension namespace is a wiki.
+     */
+    public static final String NAMESPACEPREFIX_WIKI = "wiki:";
 
-    @Override
-    public <S> S get(XWikiDocument unsafe)
+    /**
+     * Utility class.
+     */
+    private XarExtensionUtils()
     {
-        return (S) unsafe.newDocument(this.xcontextProvider.get());
+    }
+
+    public static String toWiki(String namespace)
+    {
+        return namespace != null ? namespace.substring(NAMESPACEPREFIX_WIKI.length()) : null;
     }
 }

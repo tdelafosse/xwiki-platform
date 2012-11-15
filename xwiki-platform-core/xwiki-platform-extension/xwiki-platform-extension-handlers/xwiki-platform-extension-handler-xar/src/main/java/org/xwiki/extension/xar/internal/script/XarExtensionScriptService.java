@@ -33,7 +33,6 @@ import org.xwiki.context.Execution;
 import org.xwiki.extension.ExtensionId;
 import org.xwiki.extension.internal.safe.ScriptSafeProvider;
 import org.xwiki.extension.job.InstallRequest;
-import org.xwiki.extension.repository.InstalledExtensionRepository;
 import org.xwiki.extension.script.internal.ExtensionManagerScriptService;
 import org.xwiki.extension.xar.internal.job.RepairXarJob;
 import org.xwiki.job.Job;
@@ -81,12 +80,6 @@ public class XarExtensionScriptService
     private JobManager jobManager;
 
     /**
-     * Used to manipulate the installed xar extensions.
-     */
-    @Inject
-    private InstalledExtensionRepository xarRepository;
-
-    /**
      * @param <T> the type of the object
      * @param unsafe the unsafe object
      * @return the safe version of the passed object
@@ -119,6 +112,8 @@ public class XarExtensionScriptService
     {
         this.execution.getContext().setProperty(EXTENSIONERROR_KEY, e);
     }
+
+    // Repair
 
     /**
      * Make sure the provided XAR extension properly is registered in the installed extensions index.

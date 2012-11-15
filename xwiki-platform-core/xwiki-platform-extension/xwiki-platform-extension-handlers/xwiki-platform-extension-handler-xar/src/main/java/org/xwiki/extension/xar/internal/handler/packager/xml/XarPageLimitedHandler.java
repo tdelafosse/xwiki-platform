@@ -77,10 +77,6 @@ public class XarPageLimitedHandler extends AbstractHandler
             if (this.value.length() > 0) {
                 this.xarEntry.setLocale(toLocale(this.value.toString()));
             }
-        } else if (qName.equals("defaultLanguage")) {
-            if (this.xarEntry.getLocale() == null) {
-                this.xarEntry.setLocale(toLocale(this.value.toString()));
-            }
         } else if (qName.equals("name")) {
             this.pageReference =
                 new EntityReference(this.value.toString(), EntityType.DOCUMENT, this.pageReference.getParent());
