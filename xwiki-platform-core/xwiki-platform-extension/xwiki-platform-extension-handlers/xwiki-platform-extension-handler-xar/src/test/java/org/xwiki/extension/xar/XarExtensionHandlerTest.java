@@ -385,6 +385,7 @@ public class XarExtensionHandlerTest extends AbstractBridgedComponentTestCase
         Assert.assertEquals("attachment.txt", attachment.getFilename());
         Assert.assertEquals(18, attachment.getContentSize(getContext()));
         Assert.assertEquals("attachment content", IOUtils.toString(attachment.getContentInputStream(getContext())));
+        Assert.assertEquals("xwiki:XWiki.ExtensionUser", attachment.getAuthor());
 
         // space1.page1
 
@@ -432,9 +433,9 @@ public class XarExtensionHandlerTest extends AbstractBridgedComponentTestCase
 
         // validate
 
-        DocumentReference authorReference = new DocumentReference("wiki", "XWiki", "author");
-        DocumentReference creatorReference = new DocumentReference("wiki", "XWiki", "creator");
-        DocumentReference contentAuthorReference = new DocumentReference("wiki", "XWiki", "contentAuthor");
+        DocumentReference xarAuthorReference = new DocumentReference("wiki", "XWiki", "author");
+        DocumentReference xarCreatorReference = new DocumentReference("wiki", "XWiki", "creator");
+        DocumentReference xarContentAuthorReference = new DocumentReference("wiki", "XWiki", "contentAuthor");
 
         // space.page
         XWikiDocument page = this.mockXWiki.getDocument(existingDocument.getDocumentReference(), getContext());
@@ -446,8 +447,8 @@ public class XarExtensionHandlerTest extends AbstractBridgedComponentTestCase
         Assert.assertEquals("Wrong content", "content", page.getContent());
         Assert.assertEquals("Wrong creator", new DocumentReference("wiki", "space", "existingcreator"),
             page.getCreatorReference());
-        Assert.assertEquals("Wrong author", authorReference, page.getAuthorReference());
-        Assert.assertEquals("Wrong content author", contentAuthorReference, page.getContentAuthorReference());
+        Assert.assertEquals("Wrong author", xarAuthorReference, page.getAuthorReference());
+        Assert.assertEquals("Wrong content author", xarContentAuthorReference, page.getContentAuthorReference());
         Assert.assertEquals("Wrong version", "2.1", page.getVersion());
         Assert.assertFalse("Document is hidden", page.isHidden());
 
@@ -462,9 +463,9 @@ public class XarExtensionHandlerTest extends AbstractBridgedComponentTestCase
             this.mockXWiki.getDocument(new DocumentReference("wiki", "space", "pagewithattachment"), getContext());
         Assert.assertFalse(pagewithattachment.isNew());
         Assert.assertEquals("Wrong version", "2.1", pagewithattachment.getVersion());
-        Assert.assertEquals("Wrong creator", creatorReference, pagewithattachment.getCreatorReference());
-        Assert.assertEquals("Wrong author", authorReference, pagewithattachment.getAuthorReference());
-        Assert.assertEquals("Wrong content author", contentAuthorReference,
+        Assert.assertEquals("Wrong creator", xarCreatorReference, pagewithattachment.getCreatorReference());
+        Assert.assertEquals("Wrong author", xarAuthorReference, pagewithattachment.getAuthorReference());
+        Assert.assertEquals("Wrong content author", xarContentAuthorReference,
             pagewithattachment.getContentAuthorReference());
 
         XWikiAttachment attachment = pagewithattachment.getAttachment("attachment.txt");
@@ -472,6 +473,7 @@ public class XarExtensionHandlerTest extends AbstractBridgedComponentTestCase
         Assert.assertEquals("attachment.txt", attachment.getFilename());
         Assert.assertEquals(18, attachment.getContentSize(getContext()));
         Assert.assertEquals("attachment content", IOUtils.toString(attachment.getContentInputStream(getContext())));
+        Assert.assertEquals("XWiki.attachmentauthor", attachment.getAuthor());
 
         // space1.page1
 
