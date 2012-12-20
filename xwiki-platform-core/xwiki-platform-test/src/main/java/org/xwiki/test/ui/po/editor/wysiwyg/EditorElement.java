@@ -19,16 +19,11 @@
  */
 package org.xwiki.test.ui.po.editor.wysiwyg;
 
-import java.util.List;
-
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NotFoundException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedCondition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xwiki.test.ui.po.BaseElement;
 
 /**
@@ -39,11 +34,6 @@ import org.xwiki.test.ui.po.BaseElement;
  */
 public class EditorElement extends BaseElement
 {
-    /**
-     * Logging helper object.
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(EditorElement.class);
-    
     /**
      * The XPath used to select a editor tab (Source/WYSIWYG) by its label.
      */
@@ -118,37 +108,27 @@ public class EditorElement extends BaseElement
      */
     public EditorElement waitToLoad()
     {
-        try {
-            getUtil().waitUntilCondition(new ExpectedCondition<WebElement>()
+        getUtil().waitUntilCondition(new ExpectedCondition<WebElement>()
+        {
+            @Override
+            public WebElement apply(WebDriver driver)
             {
-                @Override
-                public WebElement apply(WebDriver driver)
-                {
+                try {
+                    getContainer(driver).findElement(
+                        By.xpath("//div[@class = 'gwt-TabBarItem gwt-TabBarItem-selected']/div[. = 'Source']"));
+                    WebElement sourceTextArea = getContainer(driver).findElement(By.className("xPlainTextEditor"));
+                    return sourceTextArea.isEnabled() ? sourceTextArea : null;
+                } catch (NotFoundException sourceNotFound) {
+                    WebElement richTextEditor = getContainer(driver).findElement(By.className("xRichTextEditor"));
                     try {
-                        getContainer(driver).findElement(
-                            By.xpath("//div[@class = 'gwt-TabBarItem gwt-TabBarItem-selected']/div[. = 'Source']"));
-                        WebElement sourceTextArea = getContainer(driver).findElement(By.className("xPlainTextEditor"));
-                        return sourceTextArea.isEnabled() ? sourceTextArea : null;
-                    } catch (NotFoundException sourceNotFound) {
-                        WebElement richTextEditor = getContainer(driver).findElement(By.className("xRichTextEditor"));
-                        try {
-                            richTextEditor.findElement(By.className("loading"));
-                            return null;
-                        } catch (NotFoundException loadingNotFound) {
-                            return richTextEditor;
-                        }
+                        richTextEditor.findElement(By.className("loading"));
+                        return null;
+                    } catch (NotFoundException loadingNotFound) {
+                        return richTextEditor;
                     }
                 }
-            });
-        } finally {
-            @SuppressWarnings("unchecked")
-            List<Object> state =
-                (List<Object>) ((JavascriptExecutor) getDriver()).executeScript("return [!!window.Wysiwyg, "
-                    + "window.Wysiwyg && window.Wysiwyg.readyState, "
-                    + "window.Wysiwyg && !!window.Wysiwyg.getInstance(arguments[0])];", fieldId);
-            LOGGER.info("The WYSIWYG editor didn't load:\n" + "Wysiwyg object is present [{}]\n"
-                + "Wysiwyg module state is [{}]\n" + "The editor instance was created [{}]", state.toArray());
-        }
+            }
+        });
         return this;
     }
 

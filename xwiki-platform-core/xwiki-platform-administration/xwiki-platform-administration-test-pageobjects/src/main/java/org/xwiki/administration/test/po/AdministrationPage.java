@@ -102,14 +102,12 @@ public class AdministrationPage extends ViewPage
     public AnnotationsPage clickAnnotationsSection()
     {
         this.annotationsLink.click();
-        assertSelectedSection(this.annotationsLink);
         return new AnnotationsPage();
     }
 
     public WYSIWYGEditorAdministrationSectionPage clickWYSIWYGEditorSection()
     {
         this.wysiwygLink.click();
-        assertSelectedSection(this.wysiwygLink);
         return new WYSIWYGEditorAdministrationSectionPage();
     }
 
@@ -122,16 +120,6 @@ public class AdministrationPage extends ViewPage
     {
         pageElementsLink.click();
         return new PageElementsAdministrationSectionPage();
-    }
-
-    /**
-     * Asserts that the specified section is selected, for <strong>debugging</strong> purpose.
-     * 
-     * @param sectionLink the section link
-     */
-    private void assertSelectedSection(WebElement sectionLink)
-    {
-        sectionLink.findElement(By.xpath("parent::*[@class = 'current']"));
     }
 
     public boolean hasSection(String sectionName)
