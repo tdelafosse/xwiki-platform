@@ -158,7 +158,7 @@ import com.xpn.xwiki.store.XWikiAttachmentStoreInterface;
 import com.xpn.xwiki.store.XWikiStoreInterface;
 import com.xpn.xwiki.store.XWikiVersioningStoreInterface;
 import com.xpn.xwiki.user.api.XWikiRightService;
-import com.xpn.xwiki.util.AbstractNotifyOnUpdateList;
+import com.xpn.xwiki.internal.AbstractNotifyOnUpdateList;
 import com.xpn.xwiki.util.Util;
 import com.xpn.xwiki.validation.XWikiValidationInterface;
 import com.xpn.xwiki.validation.XWikiValidationStatus;
@@ -317,7 +317,8 @@ public class XWikiDocument implements DocumentModelBridge
      */
     private Map<DocumentReference, List<BaseObject>> xObjects = new TreeMap<DocumentReference, List<BaseObject>>();
 
-    private final List<XWikiAttachment> attachmentList = new AbstractNotifyOnUpdateList<XWikiAttachment>()
+    private final List<XWikiAttachment> attachmentList = new AbstractNotifyOnUpdateList<XWikiAttachment>(
+        new ArrayList<XWikiAttachment>())
     {
         @Override
         public void onUpdate()
@@ -3119,7 +3120,11 @@ public class XWikiDocument implements DocumentModelBridge
     {
         ListProperty prop = (ListProperty) getTagProperty(context);
 
-        return prop != null ? prop.getTextValue() : "";
+        // I don't know why we need to XML-escape the list of tags but for backwards compatibility we need to keep doing
+        // this. When this method was added it was using ListProperty#getTextValue() which used to return
+        // ListProperty#toFormString() before we fixed it to return the unescaped value because we need to save the raw
+        // value in the database and ListProperty#getTextValue() is called when the list property is saved.
+        return prop != null ? prop.toFormString() : "";
     }
 
     public List<String> getTagsList(XWikiContext context)
@@ -3201,7 +3206,6 @@ public class XWikiDocument implements DocumentModelBridge
             }
             getXObjects().put(reference, newObjects);
         }
-        setContentDirty(true);
     }
 
     public void readFromForm(EditForm eform, XWikiContext context) throws XWikiException
@@ -3265,7 +3269,6 @@ public class XWikiDocument implements DocumentModelBridge
                 }
             }
         }
-        setContentDirty(true);
     }
 
     /**
@@ -4280,8 +4283,12 @@ public class XWikiDocument implements DocumentModelBridge
 
     public void setAttachmentList(List<XWikiAttachment> list)
     {
-        this.attachmentList.clear();
-        this.attachmentList.addAll(list);
+        // For backwards compatibility reasons (and in general), we need to allow callers to do something like
+        // setAttachmentList(getAttachmentList())
+        if (this.attachmentList != list) {
+            this.attachmentList.clear();
+            this.attachmentList.addAll(list);
+        }
     }
 
     public List<XWikiAttachment> getAttachmentList()
@@ -8067,7 +8074,9 @@ public class XWikiDocument implements DocumentModelBridge
                                     objectResult.addField(diff.getPropName(), newProperty);
                                     mergeResult.setModified(true);
                                 } else {
-                                    // TODO: try to apply a 3 ways merge on the property
+                                    // Try to apply a 3 ways merge on the property
+                                    propertyResult.merge(previousProperty, newProperty, configuration, context,
+                                        mergeResult);
                                 }
                             } else {
                                 // XXX: collision between DB and new: property to modify but does not exists in DB

@@ -4399,11 +4399,11 @@ public class XWiki implements EventListener
     public String getURL(DocumentReference documentReference, String action, String queryString, String anchor,
         XWikiContext context)
     {
-        XWikiDocument doc = new XWikiDocument(documentReference);
-
         URL url =
-            context.getURLFactory().createURL(doc.getSpace(), doc.getName(), action, queryString, anchor,
-                doc.getDatabase(), context);
+            context.getURLFactory().createURL(documentReference.getLastSpaceReference().getName(),
+                documentReference.getName(), action, queryString, anchor,
+                documentReference.getWikiReference().getName(), context);
+
         return context.getURLFactory().getURL(url, context);
     }
 
@@ -4413,12 +4413,8 @@ public class XWiki implements EventListener
     @Deprecated
     public String getURL(String fullname, String action, String queryString, String anchor, XWikiContext context)
     {
-        XWikiDocument doc = new XWikiDocument(this.currentMixedDocumentReferenceResolver.resolve(fullname));
-
-        URL url =
-            context.getURLFactory().createURL(doc.getSpace(), doc.getName(), action, queryString, anchor,
-                doc.getDatabase(), context);
-        return context.getURLFactory().getURL(url, context);
+        return getURL(this.currentMixedDocumentReferenceResolver.resolve(fullname), action, queryString, anchor,
+            context);
     }
 
     public String getURL(String fullname, String action, String querystring, XWikiContext context)
@@ -4499,7 +4495,7 @@ public class XWiki implements EventListener
 
     public boolean isMultiLingual(XWikiContext context)
     {
-        return "1".equals(getXWikiPreference("multilingual", "1", context));
+        return "1".equals(getXWikiPreference("multilingual", "0", context));
     }
 
     /**
@@ -6600,11 +6596,13 @@ public class XWiki implements EventListener
         }
     };
 
+    @Override
     public List<Event> getEvents()
     {
         return LISTENER_EVENTS;
     }
 
+    @Override
     public String getName()
     {
         return "xwiki-core";
@@ -6634,12 +6632,21 @@ public class XWiki implements EventListener
     {
         XWikiMessageTool msg = context.getMessageTool();
 
-        return parseContent(msg.get(id), context);
+        List< ? > parameters = (List< ? >) context.get("messageParameters");
+
+        String translatedMessage;
+        if (parameters != null) {
+            translatedMessage = msg.get(id, parameters);
+        } else {
+            translatedMessage = msg.get(id);
+        }
+
+        return parseContent(translatedMessage, context);
     }
 
     /**
      * Return the document reference to the wiki preferences.
-     *
+     * 
      * @param context The current xwiki context.
      * @since 4.3M2
      */

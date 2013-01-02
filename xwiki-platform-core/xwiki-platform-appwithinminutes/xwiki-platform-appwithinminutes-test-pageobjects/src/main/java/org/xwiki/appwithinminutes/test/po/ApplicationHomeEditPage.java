@@ -130,7 +130,7 @@ public class ApplicationHomeEditPage extends InlinePage
 
     /**
      * Sets the application icon.
-     *
+     * 
      * @param icon the icon to set
      */
     public void setIcon(String icon)
@@ -169,7 +169,7 @@ public class ApplicationHomeEditPage extends InlinePage
         WebElement column = getLiveTableColumn(columnLabel);
         // FIXME: This doesn't trigger the :hover CSS pseudo class. The click still works because the delete X (text) is
         // not really hidden: it is displayed with white color (the page background-color).
-        new Actions(getDriver().getWrappedDriver()).moveToElement(column).perform();
+        new Actions(getDriver()).moveToElement(column).perform();
         column.findElement(By.className("delete")).click();
     }
 
@@ -181,8 +181,8 @@ public class ApplicationHomeEditPage extends InlinePage
      */
     public void moveLiveTableColumnBefore(String columnToMove, String beforeColumn)
     {
-        new Actions(getDriver().getWrappedDriver()).clickAndHold(getLiveTableColumn(columnToMove))
-            .moveToElement(getLiveTableColumn(beforeColumn), 0, 0).perform();
+        new Actions(getDriver()).clickAndHold(getLiveTableColumn(columnToMove))
+            .moveToElement(getLiveTableColumn(beforeColumn), -3, 0).release().perform();
     }
 
     /**
@@ -239,5 +239,12 @@ public class ApplicationHomeEditPage extends InlinePage
         List<WebElement> warnings =
             getUtil().findElementsWithoutWaiting(getDriver(), getForm(), By.className("warningmessage"));
         return warnings.size() == 1 && warnings.get(0).isDisplayed();
+    }
+
+    @Override
+    public ApplicationHomeEditPage waitUntilPageIsLoaded()
+    {
+        descriptionEditor.waitToLoad();
+        return this;
     }
 }

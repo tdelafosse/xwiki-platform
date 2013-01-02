@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.xwiki.platform</groupId>
     <artifactId>xwiki-platform</artifactId>
-    <version>4.3-SNAPSHOT</version>
+    <version>4.5-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-platform-core</artifactId>
   <name>XWiki Platform - Core - Parent POM</name>
@@ -40,36 +40,9 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit-dep</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-library</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>jmock</groupId>
-      <artifactId>jmock</artifactId>
-      <version>1.2.0</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>junit</groupId>
-          <artifactId>junit</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>jmock</groupId>
-      <artifactId>jmock-cglib</artifactId>
-      <version>1.2.0</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jmock</groupId>
-      <artifactId>jmock-junit4</artifactId>
+      <groupId>org.xwiki.commons</groupId>
+      <artifactId>xwiki-commons-test-component</artifactId>
+      <version>${commons.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -86,7 +59,7 @@
       <dependency>
         <groupId>org.jgroups</groupId>
         <artifactId>jgroups</artifactId>
-        <version>3.2.0.Final</version>
+        <version>3.2.5.Final</version>
       </dependency>
       <!-- Apache Tika used by Lucene and Office modules -->
       <dependency>
@@ -111,7 +84,7 @@
         <groupId>rome</groupId>
         <artifactId>rome</artifactId>
         <version>1.0</version>
-        <!-- Exclude JDOM since Rome depends on JDOM 1.0 and we want to use JDOM 1.1 -->
+        <!-- Exclude JDOM since Rome depends on jdom:jdom and we want to use org.jdom:jdom -->
         <exclusions>
           <exclusion>
             <groupId>jdom</groupId>
@@ -123,6 +96,13 @@
         <groupId>rome</groupId>
         <artifactId>rome-fetcher</artifactId>
         <version>1.0</version>
+        <!-- Exclude JDOM since Rome depends on jdom:jdom and we want to use org.jdom:jdom -->
+        <exclusions>
+          <exclusion>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <!-- Replace the runtime transitive dependency we excluded above with this one which repackages the NekoHTML classes to prevent conflicts. -->
@@ -152,6 +132,11 @@
           <exclusion>
             <groupId>xalan</groupId>
             <artifactId>xalan</artifactId>
+          </exclusion>
+          <!-- We want to choose the SLF4J binding only when XWiki is packaged. -->
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -276,164 +261,119 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>clirr-maven-plugin</artifactId>
         <configuration>
+          <!-- List of specific CLIRR excludes. Example:
+
+               <difference>
+                 <className>org/xwiki/ircbot/IRCBot</className>
+                 <method>void initialize(java.lang.String)</method>
+                 <differenceType>7012</differenceType>
+                 <justification>IRCBot is still a young API. Added a new initialize() method to support installing the
+                 IRC Bot application in a subwiki</justification>
+               </difference>
+               
+               See http://mojo.codehaus.org/clirr-maven-plugin/examples/ignored-differences.html
+          -->
           <ignored>
-            <difference>
-              <className>org/xwiki/ircbot/IRCBot</className>
-              <method>void initialize(java.lang.String)</method>
-              <differenceType>7012</differenceType>
-              <justification>IRCBot is still a young API. Added a new initialize() method to support installing the
-                IRC Bot application in a subwiki</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponent</className>
-              <method>java.lang.Class getRole()</method>
-              <differenceType>7002</differenceType>
-              <justification>WikiComponent is still a young API. Removed the method to implement XWIKI-8233, 
-                "Allow wiki components to implement parameterized types"</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponent</className>
-              <method>java.lang.reflect.Type getRoleType()</method>
-              <differenceType>7012</differenceType>
-              <justification>WikiComponent is still a young API. Added this method to implement XWIKI-8233, 
-                "Allow wiki components to implement parameterized types"</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponent</className>
-              <method>java.util.Map getHandledMethods()</method>
-              <differenceType>7002</differenceType>
-              <justification>WikiComponent is still a young API. Removed the method since it wasn't useful here
-              </justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponent</className>
-              <method>java.util.List getImplementedInterfaces()</method>
-              <differenceType>7002</differenceType>
-              <justification>WikiComponent is still a young API. Removed the method since it wasn't useful here
-              </justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/MethodOutputHandler</className>
-              <differenceType>8001</differenceType>
-              <justification>WikiComponent is still a young API. Moved the class to the internal package</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponentInvocationHandler</className>
-              <differenceType>8001</differenceType>
-              <justification>WikiComponent is still a young API. Moved the class to the internal package</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponent</className>
-              <method>java.lang.reflect.Type getRoleType()</method>
-              <differenceType>7012</differenceType>
-              <justification>WikiComponent is still a young API. Added this method to implement XWIKI-8233,
-                "Allow wiki components to implement parameterized types"</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponent</className>
-              <method>org.xwiki.model.reference.DocumentReference getAuthorReference()</method>
-              <differenceType>7012</differenceType>
-              <justification>WikiComponent is still a young API. Added this method to implement XWIKI-8234,
-                "Allow wiki components to be registered at different levels (user / wiki / global)"</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/component/wiki/WikiComponent</className>
-              <method>org.xwiki.component.wiki.WikiComponentScope getScope()</method>
-              <differenceType>7012</differenceType>
-              <justification>WikiComponent is still a young API. Added this method to implement XWIKI-8234,
-                "Allow wiki components to be registered at different levels (user / wiki / global)"</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/uiextension/UIExtension</className>
-              <method>java.util.List execute()</method>
-              <differenceType>7006</differenceType>
-              <to>org.xwiki.rendering.block.Block</to>
-              <justification>UIExtension is still a young API. Replaced the List of Block by a Block since Block can
-                can now hold a list of Block</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/uiextension/UIExtension</className>
-              <method>java.lang.String getName()</method>
-              <differenceType>7002</differenceType>
-              <justification>UIExtension is still a young API. getName() has been renamed to getId()</justification>
-            </difference>
-            <difference>
-              <className>org/xwiki/uiextension/UIExtension</className>
-              <method>java.lang.String getId()</method>
-              <differenceType>7012</differenceType>
-              <justification>UIExtension is still a young API. getName() has been renamed to getId()</justification>
-            </difference>
-            <difference>
-              <className>com/xpn/xwiki/objects/ElementInterface</className>
-              <method>boolean apply(com.xpn.xwiki.objects.ElementInterface, boolean)</method>
-              <differenceType>7012</differenceType>
-              <justification>Added a common method to all elements to set all the data from another element.
-                Technically this does not really break anything because all elements are supposed to extends BaseElement</justification>
-            </difference>
+            <!-- Remove the following ignores after we release the current version as final -->
             <difference>
               <className>com/xpn/xwiki/objects/ListProperty</className>
-              <field>list</field>
-              <differenceType>6006</differenceType>
-              <justification>Elemenents must be added to the wrapping NotifyOnList to ensure that the property is marked 'dirty' when updated. To avoid that this mechanism is circumvented, the field is made final.</justification>
-            </difference>
-            <difference>
-              <className>com/xpn/xwiki/doc/XWikiDocument</className>
-              <field>language</field>
-              <differenceType>6001</differenceType>
-              <justification>Stored as Locale now and should have never been protected anyway.</justification>
-            </difference>
-            <difference>
-              <className>com/xpn/xwiki/XWiki</className>
-              <method>void setUrlPatternMatcher(org.securityfilter.filter.URLPatternMatcher)</method>
+              <method>void setUseHibernateWorkaround(boolean)</method>
               <differenceType>7002</differenceType>
-              <justification>URLPatternMatcher instances cannot generally be reused (because the underlaying Perl5Matcher cannot be reused) on different strings and with different patterns and a new instance must be produced on demand.  It is, thus, meaningless to set an instance.  If there is any code relying on this method, it is broken already.  Thus, we should remove this without going through deprecation.  The only place where getUrlPatternMatcher is used in core appears to be in XWikiAuthServiceImpl in processLogout.  This method appears to fail occasionally because the urlPatternMatcher instance is reused.  See: http://ci.xwiki.org/job/xwiki-enterprise-test-ui/org.xwiki.enterprise$xwiki-enterprise-test-ui/1746/console.</justification>
+              <justification>The hibernate workaround added in 4.3M2 have been replaced with a cleaner solution.</justification>
             </difference>
             <difference>
-              <className>com/xpn/xwiki/XWiki</className>
-              <method>org.securityfilter.filter.URLPatternMatcher getUrlPatternMatcher()</method>
+              <className>com/xpn/xwiki/store/XWikiHibernateBaseStore</className>
+              <method>void addListPropertyWorkaroundHandler(com.xpn.xwiki.objects.PropertyInterface)</method>
               <differenceType>7002</differenceType>
-              <justification>We might as well remove the getter.  See above.</justification>
+              <justification>The hibernate workaround added in 4.3M2 have been replaced with a cleaner solution.</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/util/AbstractNotifyOnUpdateList</className>
+              <differenceType>8001</differenceType>
+              <justification>The AbtractNotifyOnUpdateList wrapper class no longer inherits ArrayList, because it is used as a non-static enclosed class in XWikiDocument, which is non-serializable, so the list wrapper cannot be serializeble.  Let's move the entire class to an internal package while we are at it.</justification>
+            </difference>
+            <difference>
+              <className>org/xwiki/url/AbstractXWikiURL</className>
+              <differenceType>3005</differenceType>
+              <justification>The AbstractXWikiURL should have been abstract from the beginning, as the name implies.</justification>
+            </difference>
+            <!-- XWIKI-8577 Move lucene plugin classes to an internal package -->
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/AbstractDocumentData</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/AbstractIndexData</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/AttachmentData</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/DocumentData</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/IndexFields</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/IndexRebuilder</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/IndexUpdater</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/WikiData</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/XWikiDocumentQueue</className>
+              <differenceType>8001</differenceType>
+              <justification>Moved to an internal package</justification>
+            </difference>
+            <!-- XWIKI-8404 Upgrade to lucene 4.0.0 -->
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/LucenePlugin</className>
+              <method>org.apache.lucene.search.Searcher[] createSearchers(java.lang.String, com.xpn.xwiki.XWikiContext)</method>
+              <differenceType>7002</differenceType>
+              <justification>Method removed (renamed) the searcher notion has been replaced by index readers in lucene 4.0</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/LucenePlugin</className>
+              <method>void openSearchers(com.xpn.xwiki.XWikiContext)</method>
+              <differenceType>7002</differenceType>
+              <justification>Method removed (renamed) the searcher notion has been replaced by index readers in lucene 4.0</justification>
+            </difference>
+            <difference>
+              <className>com/xpn/xwiki/plugin/lucene/LucenePlugin</className>
+              <method>void closeSearchers(org.apache.lucene.search.Searcher[])</method>
+              <differenceType>7002</differenceType>
+              <justification>Method removed : it is not needed anymore since index readers are automatically closed in Lucene 4.0</justification>
             </difference>
           </ignored>
           <excludes>
             <exclude>**/internal/**</exclude>
             <exclude>**/test/**</exclude>
-            <!-- FIXME: A new 'sendMessageFromTemplate' method was added before the 4.2 release and then removed only
-                 from master (4.3-SNAPSHOT). We need to decide what we do with this method. -->
-            <exclude>com/xpn/xwiki/plugin/mailsender/MailSender</exclude>
-            <!-- Ignoring error on field version which has been moved from Page to PageSummary which is the superclass of Page -->
-            <exclude>org/xwiki/rest/model/jaxb/Page</exclude>
-            <!-- Ignoring error on rest DomainObjectFactory as it is internal code -->
-            <exclude>org/xwiki/rest/DomainObjectFactory</exclude>
-            <exclude>org/xwiki/rest/resources/**</exclude>
-            <!-- Moved a lot of previously public API to internal packages. The initial implementation put everything in public
-                 packages which is wrong. This move is to correct the initial error, and leave in public packages only the
-                 classes that are really part of a public API. (See discussion: http://xwiki.markmail.org/thread/iqktyceut5bmw4rl)
-                 Remove this check on the next release (i.e. 4.3 final) -->
-            <exclude>org/xwiki/rest/exceptions/**</exclude>
-            <exclude>org/xwiki/rest/representations/**</exclude>
-            <exclude>org/xwiki/rest/ComponentsObjectFactory</exclude>
-            <exclude>org/xwiki/rest/Constants</exclude>
-            <exclude>org/xwiki/rest/RangeIterable</exclude>
-            <exclude>org/xwiki/rest/Utils</exclude>
-            <exclude>org/xwiki/rest/XWikiAuthentication</exclude>
-            <exclude>org/xwiki/rest/XWikiJaxRsApplication</exclude>
-            <exclude>org/xwiki/rest/XWikiRestletJaxRsApplication</exclude>
-            <exclude>org/xwiki/rest/XWikiRestletServlet</exclude>
-            <exclude>org/xwiki/rest/XWikiSecretVerifier</exclude>
-            <exclude>org/xwiki/rest/XWikiSetupCleanupFilter</exclude>
-            <!-- Not a breakage! This class has been moved to the xwiki-platform-rest-model where it logically belongs to -->
-            <exclude>org/xwiki/rest/Relations</exclude>
-            <!-- Not a breakage! The plugin has been moved to its own module. -->
-            <exclude>com/xpn/xwiki/plugin/feed/**/*</exclude>
-            <!-- Module has been retired as it was unmaintained. -->
-            <exclude>com/xpn/xwiki/plugin/userdirectory/**/*</exclude>
-            <!-- Module has been retired as it was unmaintained. -->
-            <exclude>com/xpn/xwiki/plugin/usertools/**/*</exclude>
-            <!-- Added methods for creating workspaces and retrieving workspace templates.
-                 Vote mail: http://markmail.org/thread/gtxoszztc5lt7o4f
-                 Remove this check on the next release (i.e., 4.3-M2) -->
-            <exclude>org/xwiki/workspace/WorkspaceManager</exclude>
+            <!-- Remove the following excludes after we release the current version as final -->
+            <!-- Excluding the whole lucene plugin class as I could not succeed in expressing individual differences of type 7005 (Method Argument Type changed),
+                 it fails with java.util.Arrays$ArrayList cannot be cast to org.codehaus.mojo.clirr.Difference even though I declare the "method" and its new signature "to"
+                 There are 2 such differences :
+                   void init(com.xpn.xwiki.plugin.lucene.IndexUpdater, com.xpn.xwiki.XWikiContext) -> void init(com.xpn.xwiki.plugin.lucene.internal.IndexUpdater, com.xpn.xwiki.XWikiContext)
+               and void init(com.xpn.xwiki.plugin.lucene.IndexUpdater, com.xpn.xwiki.plugin.lucene.IndexRebuilder, com.xpn.xwiki.XWikiContext) -> void init(com.xpn.xwiki.plugin.lucene.internal.IndexUpdater, com.xpn.xwiki.plugin.lucene.internal.IndexRebuilder, com.xpn.xwiki.XWikiContext)
+                 -->
+            <exclude>com/xpn/xwiki/plugin/lucene/LucenePlugin</exclude>
           </excludes>
         </configuration>
       </plugin>
@@ -510,7 +450,6 @@
     <module>xwiki-platform-store</module>
     <module>xwiki-platform-tag</module>
     <module>xwiki-platform-test</module>
-    <module>xwiki-platform-toucan</module>
     <module>xwiki-platform-user</module>
     <module>xwiki-platform-uiextension</module>
     <module>xwiki-platform-url</module>

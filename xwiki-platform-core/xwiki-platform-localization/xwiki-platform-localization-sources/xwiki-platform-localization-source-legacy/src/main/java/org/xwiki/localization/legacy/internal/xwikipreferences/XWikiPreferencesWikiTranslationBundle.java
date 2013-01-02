@@ -20,13 +20,13 @@
 package org.xwiki.localization.legacy.internal.xwikipreferences;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import org.xwiki.bridge.DocumentAccessBridge;
@@ -36,7 +36,6 @@ import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.localization.Translation;
 import org.xwiki.localization.TranslationBundle;
 import org.xwiki.localization.internal.AbstractTranslationBundle;
-import org.xwiki.localization.message.TranslationMessageParser;
 import org.xwiki.localization.wiki.internal.DefaultDocumentTranslationBundle;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
@@ -47,8 +46,8 @@ import org.xwiki.observation.EventListener;
 import org.xwiki.observation.ObservationManager;
 import org.xwiki.observation.event.Event;
 
+import com.xpn.xwiki.internal.event.XObjectPropertyAddedEvent;
 import com.xpn.xwiki.internal.event.XObjectPropertyUpdatedEvent;
-import com.xpn.xwiki.objects.classes.ListClass;
 
 /**
  * @version $Id$
@@ -69,35 +68,31 @@ public class XWikiPreferencesWikiTranslationBundle extends AbstractTranslationBu
      */
     private static final String JOIN_SEPARATOR = ",";
 
-    private ComponentManager componentManager;
-
     private ObservationManager observation;
 
     private DocumentAccessBridge documentAccessBridge;
 
     private DocumentReferenceResolver<String> resolver;
 
-    private TranslationMessageParser translationMessageParser;
-
     private final List<Event> events;
 
     private final String wiki;
 
-    private Map<DocumentReference, DefaultDocumentTranslationBundle> bundles =
-        new ConcurrentHashMap<DocumentReference, DefaultDocumentTranslationBundle>();
+    private XWikiPreferencesTranslationBundle parent;
 
-    public XWikiPreferencesWikiTranslationBundle(String wiki, ComponentManager componentManager)
-        throws ComponentLookupException
+    private Map<DocumentReference, DefaultDocumentTranslationBundle> bundles;
+
+    public XWikiPreferencesWikiTranslationBundle(String wiki, XWikiPreferencesTranslationBundle parent,
+        ComponentManager componentManager) throws ComponentLookupException
     {
         super(XWikiPreferencesWikiTranslationBundle.ID + '.' + wiki);
 
         this.wiki = wiki;
+        this.parent = parent;
 
-        this.componentManager = componentManager;
         this.observation = componentManager.getInstance(ObservationManager.class);
         this.documentAccessBridge = componentManager.getInstance(DocumentAccessBridge.class);
         this.resolver = componentManager.getInstance(DocumentReferenceResolver.TYPE_STRING);
-        this.translationMessageParser = componentManager.getInstance(TranslationMessageParser.class, "messagetool/1.0");
 
         intializeBundles();
 
@@ -109,7 +104,9 @@ public class XWikiPreferencesWikiTranslationBundle extends AbstractTranslationBu
             new EntityReference(DOCUMENT_BUNDLE_PROPERTY, EntityType.OBJECT_PROPERTY, new RegexEntityReference(
                 Pattern.compile(this.wiki + ":XWiki.XWikiPreferences\\[\\d*\\]"), EntityType.OBJECT, preferences));
 
-        this.events = Arrays.<Event> asList(new XObjectPropertyUpdatedEvent(documentBundlesProperty));
+        this.events =
+            Arrays.<Event> asList(new XObjectPropertyAddedEvent(documentBundlesProperty),
+                new XObjectPropertyUpdatedEvent(documentBundlesProperty));
 
         this.observation.addListener(this);
     }
@@ -122,11 +119,16 @@ public class XWikiPreferencesWikiTranslationBundle extends AbstractTranslationBu
             (String) this.documentAccessBridge.getProperty(preferencesReference, preferencesReference,
                 DOCUMENT_BUNDLE_PROPERTY);
 
-        List<String> documentNameList = ListClass.getListFromString(documentNameListString, JOIN_SEPARATOR, false);
+        Set<DocumentReference> documents;
+        if (documentNameListString != null) {
+            String[] documentNameList = documentNameListString.split(JOIN_SEPARATOR);
 
-        Set<DocumentReference> documents = new LinkedHashSet<DocumentReference>(documentNameList.size());
-        for (String documentName : documentNameList) {
-            documents.add(this.resolver.resolve(documentName, preferencesReference));
+            documents = new LinkedHashSet<DocumentReference>(documentNameList.length);
+            for (String documentName : documentNameList) {
+                documents.add(this.resolver.resolve(documentName.trim(), preferencesReference));
+            }
+        } else {
+            documents = Collections.emptySet();
         }
 
         return documents;
@@ -139,23 +141,13 @@ public class XWikiPreferencesWikiTranslationBundle extends AbstractTranslationBu
         Map<DocumentReference, DefaultDocumentTranslationBundle> newBundles =
             new LinkedHashMap<DocumentReference, DefaultDocumentTranslationBundle>(documents.size());
         for (DocumentReference document : documents) {
-            DefaultDocumentTranslationBundle documentBundle = this.bundles.get(document);
-            if (documentBundle == null) {
-                try {
-                    documentBundle =
-                        new DefaultDocumentTranslationBundle(document, this.componentManager,
-                            this.translationMessageParser);
-                } catch (ComponentLookupException e) {
-                    // Should never happen
-                    this.logger.error("Failed to create document bundle for document [{}]", document, e);
-                }
-            }
-            newBundles.put(document, documentBundle);
+            newBundles.put(document, this.parent.getDocumentTranslationBundle(document));
         }
+
         this.bundles = newBundles;
     }
 
-    // EventListener
+    // EventListeners
 
     @Override
     public String getName()

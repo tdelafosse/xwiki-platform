@@ -27,7 +27,7 @@
   <parent>
     <artifactId>xwiki-platform-search-solr</artifactId>
     <groupId>org.xwiki.platform</groupId>
-    <version>4.3-SNAPSHOT</version>
+    <version>4.5-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-platform-search-solr-query</artifactId>
   <packaging>jar</packaging>
@@ -49,12 +49,5 @@
       <artifactId>xwiki-platform-search-solr-api</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-test</artifactId>
-      <version>${commons.version}</version>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
-  
 </project>

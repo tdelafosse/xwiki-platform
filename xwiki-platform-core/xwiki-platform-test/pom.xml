@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.xwiki.platform</groupId>
     <artifactId>xwiki-platform-core</artifactId>
-    <version>4.3-SNAPSHOT</version>
+    <version>4.5-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-platform-test</artifactId>
   <name>XWiki Platform - Test Framework</name>
@@ -36,12 +36,8 @@
   <dependencies>
     <dependency>
       <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-component-default</artifactId>
+      <artifactId>xwiki-commons-test-component</artifactId>
       <version>${commons.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit-dep</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-httpclient</groupId>
@@ -52,10 +48,11 @@
       <artifactId>cpsuite</artifactId>
       <version>1.2.5</version>
     </dependency>
+    <!-- Used to execute the external XWiki process -->
     <dependency>
-      <groupId>org.apache.ant</groupId>
-      <artifactId>ant</artifactId>
-      <version>1.7.0</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-exec</artifactId>
+      <version>1.1</version>
     </dependency>
 
     <!-- Manipulate xwiki.properrties -->
@@ -68,6 +65,13 @@
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-java</artifactId>
+      <exclusions>
+        <!-- We want to choose the SLF4J binding only when XWiki is packaged. -->
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Make it easy to debug flickering tests by repeating them.

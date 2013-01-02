@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.xwiki.platform</groupId>
     <artifactId>xwiki-platform-store</artifactId>
-    <version>4.3-SNAPSHOT</version>
+    <version>4.5-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-platform-store-transaction</artifactId>
   <name>XWiki Platform - Store - Transaction</name>
@@ -82,6 +82,7 @@
     new DoSomethingElseTransactionRunnable().runIn(this);
     }
     ..
+    }
 
     The only limitations on running TransactionRunnables inside of one another are they cannot run more
     than once and they cannot call themselves (this would be an infinite loop).

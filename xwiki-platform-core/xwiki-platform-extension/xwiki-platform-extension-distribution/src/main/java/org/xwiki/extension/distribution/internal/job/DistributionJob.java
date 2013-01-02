@@ -70,25 +70,37 @@ public class DistributionJob extends AbstractJob<DistributionRequest>
 
         // Step 1: Install/upgrade main wiki UI
 
+        DistributionStepStatus step1 = new DistributionStepStatus("extension.mainui");
+        steps.add(step1);
         // Only if the UI is not already installed
-        if (this.installedRepository.getInstalledExtension(extensionUI) == null) {
-            steps.add(new DistributionStepStatus("extension.mainui"));
+        step1.setUpdateState(UpdateState.COMPLETED);
+        if (extensionUI != null) {
+            // FIXME: using "xwiki" directly is cheating but there is no way to get the official main wiki at this
+            // level yet. Using "xwiki" since in pratice there is no way to change the main wiki
+            InstalledExtension installedExtension =
+                this.installedRepository.getInstalledExtension(extensionUI.getId(), "wiki:xwiki");
+            if (installedExtension == null || !installedExtension.getId().getVersion().equals(extensionUI.getVersion())) {
+                step1.setUpdateState(null);
+            }
         }
 
         // Step 2: Upgrade outdated extensions
 
+        DistributionStepStatus step2 = new DistributionStepStatus("extension.outdatedextensions");
+        steps.add(step2);
+        step2.setUpdateState(UpdateState.COMPLETED);
         // Upgrade outdated extensions only when there is outdated extensions
         for (InstalledExtension extension : this.installedRepository.getInstalledExtensions()) {
             Collection<String> namespaces = extension.getNamespaces();
             if (namespaces == null) {
                 if (!extension.isValid(null)) {
-                    steps.add(new DistributionStepStatus("extension.outdatedextensions"));
+                    step2.setUpdateState(null);
                     break;
                 }
             } else {
                 for (String namespace : namespaces) {
                     if (!extension.isValid(namespace)) {
-                        steps.add(new DistributionStepStatus("extension.outdatedextensions"));
+                        step2.setUpdateState(null);
                         break;
                     }
                 }
@@ -96,8 +108,11 @@ public class DistributionJob extends AbstractJob<DistributionRequest>
         }
 
         // Step 0: A welcome message. Only if there is actually something to do
-        if (!steps.isEmpty()) {
-            steps.add(0, new DistributionStepStatus("welcome"));
+        for (DistributionStepStatus step : steps) {
+            if (step.getUpdateState() == null) {
+                steps.add(0, new DistributionStepStatus("welcome"));
+                break;
+            }
         }
 
         // Create status

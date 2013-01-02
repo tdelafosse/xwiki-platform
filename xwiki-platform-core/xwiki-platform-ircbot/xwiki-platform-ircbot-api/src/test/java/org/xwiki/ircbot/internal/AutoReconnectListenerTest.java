@@ -26,8 +26,8 @@ import org.pircbotx.hooks.events.DisconnectEvent;
 import org.pircbotx.hooks.managers.ThreadedListenerManager;
 import org.slf4j.Logger;
 import org.xwiki.ircbot.IRCBotListener;
-import org.xwiki.test.AbstractMockingComponentTestCase;
-import org.xwiki.test.annotation.MockingRequirement;
+import org.xwiki.test.jmock.AbstractMockingComponentTestCase;
+import org.xwiki.test.jmock.annotation.MockingRequirement;
 import org.jmock.lib.legacy.ClassImposteriser;
 
 /**

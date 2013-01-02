@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.xwiki.platform</groupId>
     <artifactId>xwiki-platform-localization-syntaxes</artifactId>
-    <version>4.3-SNAPSHOT</version>
+    <version>4.5-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-platform-localization-syntax-messagetool</artifactId>
   <name>XWiki Platform - Localization - Syntax - MessageTool</name>
@@ -40,14 +40,6 @@
       <artifactId>xwiki-rendering-syntax-plain</artifactId>
       <version>${rendering.version}</version>
       <scope>runtime</scope>
-    </dependency>
-
-    <!-- Test dependencies -->
-    <dependency>
-      <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-test</artifactId>
-      <version>${commons.version}</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

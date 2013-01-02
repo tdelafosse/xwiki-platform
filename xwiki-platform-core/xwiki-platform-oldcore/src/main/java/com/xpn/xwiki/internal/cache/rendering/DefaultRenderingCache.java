@@ -19,8 +19,11 @@
  */
 package com.xpn.xwiki.internal.cache.rendering;
 
-import java.util.HashMap;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -38,7 +41,7 @@ import com.xpn.xwiki.internal.cache.DocumentCache;
 
 /**
  * Default implementation of {@link RenderingCache}.
- * 
+ *
  * @version $Id$
  * @since 2.4M1
  */
@@ -46,6 +49,11 @@ import com.xpn.xwiki.internal.cache.DocumentCache;
 @Singleton
 public class DefaultRenderingCache implements RenderingCache, Initializable
 {
+    /**
+     * UTF-8 encoding key.
+     */
+    private static final String UTF8 = "UTF-8";
+
     /**
      * Identifier of the rendering cache.
      */
@@ -95,13 +103,12 @@ public class DefaultRenderingCache implements RenderingCache, Initializable
         String renderedContent = null;
 
         if (this.configuration.isCached(documentReference)) {
-            String refresh =
-                context.getRequest() != null ? context.getRequest().getParameter(PARAMETER_REFRESH) : null;
+            String refresh = context.getRequest() != null ? context.getRequest().getParameter(PARAMETER_REFRESH) : null;
 
             if (!"1".equals(refresh)) {
                 renderedContent =
-                    this.cache.get(documentReference, source, getAction(context), context.getLanguage(),
-                        getRequestParameters(context));
+                        this.cache.get(documentReference, source, getAction(context), context.getLanguage(),
+                                getRequestParameters(context));
             }
         }
 
@@ -110,17 +117,17 @@ public class DefaultRenderingCache implements RenderingCache, Initializable
 
     @Override
     public void setRenderedContent(DocumentReference documentReference, String source, String renderedContent,
-        XWikiContext context)
+            XWikiContext context)
     {
         if (this.configuration.isCached(documentReference)) {
             this.cache.set(renderedContent, documentReference, source, getAction(context), context.getLanguage(),
-                getRequestParameters(context));
+                    getRequestParameters(context));
         }
     }
 
     /**
      * Extract action information from the context.
-     * 
+     *
      * @param context the XWiki context
      * @return the current action
      */
@@ -130,27 +137,57 @@ public class DefaultRenderingCache implements RenderingCache, Initializable
     }
 
     /**
-     * Exact action information from the context.
-     * 
+     * Extract action information from the context.
+     *
      * @param context the XWiki context
      * @return the current request parameters
      */
     private String getRequestParameters(XWikiContext context)
     {
         if (context.getRequest() != null) {
-            Map<String, String> parameters = context.getRequest().getParameterMap();
+            Map<String, String[]> parameters = context.getRequest().getParameterMap();
 
             if (parameters != null) {
-                if (parameters.containsKey(PARAMETER_REFRESH)) {
-                    parameters = new HashMap<String, String>(parameters);
-
-                    parameters.remove(PARAMETER_REFRESH);
-                }
-
-                return parameters.toString();
+                // Sort the Map so that the returned value can be used as a key that doesn't change if the servlet
+                // container sends the parameter in a different order.
+                SortedMap<String, String[]> sortedMap = new TreeMap<String, String[]>(parameters);
+                return constructRequestString(sortedMap);
             }
         }
 
         return "";
+    }
+
+    /**
+     * Encode the passed parameters in UTF-8 and return a String representing them.
+     *
+     * @param sortedMap the map representing the Request parameters
+     * @return the encoded parameters as a String
+     */
+    private String constructRequestString(SortedMap<String, String[]> sortedMap)
+    {
+        StringBuilder sb = new StringBuilder();
+        // TODO: Create a common class to serialize and encode parameters since this is a common need, and use
+        // a Commons Collection Predicate to exclude the refresh parameter.
+        for (Map.Entry<String, String[]> entry : sortedMap.entrySet()) {
+            // If the parameter is the refresh parameter then ignore it
+            if (!entry.getKey().equals(PARAMETER_REFRESH)) {
+                for (String value : entry.getValue()) {
+                    if (sb.length() > 0) {
+                        sb.append('&');
+                    }
+                    try {
+                        sb.append(URLEncoder.encode(entry.getKey(), UTF8)).append('=')
+                                .append(URLEncoder.encode(value, UTF8));
+                    } catch (UnsupportedEncodingException e) {
+                        // That should never happen since UTF-8 is supposed to be available in any JVM.
+                        throw new RuntimeException(
+                            String.format("Failed to URL encode [[%s]:[%s]] parameter using UTF-8.",
+                                entry.getKey(), entry.getValue()), e);
+                    }
+                }
+            }
+        }
+        return sb.toString();
     }
 }

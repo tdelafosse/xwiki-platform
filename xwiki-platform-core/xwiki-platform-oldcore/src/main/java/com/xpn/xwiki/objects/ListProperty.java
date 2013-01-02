@@ -28,11 +28,11 @@ import org.dom4j.Element;
 import org.dom4j.dom.DOMElement;
 import org.hibernate.collection.PersistentCollection;
 import org.xwiki.diff.DiffManager;
-import org.xwiki.xml.XMLUtils;
 
 import com.xpn.xwiki.doc.merge.MergeResult;
-import com.xpn.xwiki.util.AbstractNotifyOnUpdateList;
+import com.xpn.xwiki.internal.AbstractNotifyOnUpdateList;
 import com.xpn.xwiki.internal.merge.MergeUtils;
+import com.xpn.xwiki.internal.objects.ListPropertyPersistentList;
 import com.xpn.xwiki.web.Utils;
 
 public class ListProperty extends BaseProperty implements Cloneable
@@ -45,19 +45,18 @@ public class ListProperty extends BaseProperty implements Cloneable
     /**
      * We make this a notifying list, because we must propagate any value updates to the owner document.
      */
-    protected final List<String> list = new AbstractNotifyOnUpdateList<String>()
-    {
-        @Override
-        public void onUpdate()
-        {
-            setValueDirty(true);
-        }
-    };
+    protected transient List<String> list;
 
     private String formStringSeparator = "|";
 
-    /** Indicate that hibernate workaround for getList should be enabled. */
-    private boolean useHibernateWorkaround = false;
+    /**
+     * This is the actual list.  It will be used during serialization/deserialization.
+     */
+    private List<String> actualList = new ArrayList<String>();
+
+    {
+        list = new NotifyList(actualList, this);
+    }
 
     public String getFormStringSeparator()
     {
@@ -81,9 +80,14 @@ public class ListProperty extends BaseProperty implements Cloneable
         this.setList((List<String>) value);
     }
 
+    /**
+     * This method is called by Hibernate to get the raw value to store in the database. Check the xwiki.hbm.xml file.
+     * 
+     * @return the string value that is saved in the database
+     */
     public String getTextValue()
     {
-        return toFormString();
+        return toText();
     }
 
     @Override
@@ -93,25 +97,16 @@ public class ListProperty extends BaseProperty implements Cloneable
             return "";
         }
 
-        return StringUtils.join(getList().toArray(), " ");
+        List<String> escapedValues = new ArrayList<String>();
+        for (String value : getList()) {
+            escapedValues.add(value.replace(this.formStringSeparator, "\\" + this.formStringSeparator));
+        }
+        return StringUtils.join(escapedValues, this.formStringSeparator);
     }
 
     public String toSingleFormString()
     {
         return super.toFormString();
-    }
-
-    @Override
-    public String toFormString()
-    {
-        List<String> list = getList();
-        StringBuilder result = new StringBuilder();
-        for (String item : list) {
-            result.append(XMLUtils.escape(item).replace(this.formStringSeparator, "\\" + this.formStringSeparator));
-            result.append(this.formStringSeparator);
-        }
-
-        return StringUtils.chomp(result.toString(), this.formStringSeparator);
     }
 
     @Override
@@ -158,29 +153,31 @@ public class ListProperty extends BaseProperty implements Cloneable
     @Override
     public ListProperty clone()
     {
-        ListProperty property = (ListProperty) super.clone();
-        List<String> list = new ArrayList<String>();
-        for (String entry : getList()) {
-            list.add(entry);
-        }
-        property.setValue(list);
+        return (ListProperty) super.clone();
+    }
 
-        return property;
+    @Override
+    protected void cloneInternal(BaseProperty clone)
+    {
+        ListProperty property = (ListProperty) clone;
+        property.actualList = new ArrayList<String>();
+        for (String entry : getList()) {
+            property.actualList.add(entry);
+        }
+        property.list = new NotifyList(property.actualList, property);
     }
 
     public List<String> getList()
     {
-        if (useHibernateWorkaround) {
-            // FIXME: Hibernate does not like the
-            // AbstractNotifyOnUpdateList, so we must use a workaround
-            // when saving this property.  Try removing this
-            // workaround after we have upgraded hibernate.
-            List<String> arrayList = new ArrayList<String>();
-            arrayList.addAll(list);
-            return arrayList;
-        } else {
-            return this.list;
+        // Hibernate will not set the owner of the notify list, so we must make sure this has been done before returning
+        // the list.
+        if (list instanceof NotifyList) {
+            ((NotifyList) list).setOwner(this);
+        } else if (list instanceof ListPropertyPersistentList) {
+            ((ListPropertyPersistentList) list).setOwner(this);
         }
+
+        return this.list;
     }
 
     /**
@@ -191,15 +188,41 @@ public class ListProperty extends BaseProperty implements Cloneable
      */
     public void setList(List<String> list)
     {
-        this.list.clear();
-        if (list != null) {
+        if (list == this.list || list == this.actualList) {
+            // Accept a caller that sets the already existing list instance.
+            return;
+        } 
+
+        if (this.list instanceof ListPropertyPersistentList) {
+            ListPropertyPersistentList persistentList = (ListPropertyPersistentList) this.list;
+            if (persistentList.isWrapper(list)) {
+                // Accept a caller that sets the already existing list instance.
+                return;
+            }
+        }
+
+        if (list instanceof ListPropertyPersistentList) {
+            // This is the list wrapper we are using for hibernate.
+            ListPropertyPersistentList persistentList = (ListPropertyPersistentList) list;
+            this.list = persistentList;
+            persistentList.setOwner(this);
+            return;
+        }
+
+        if (list == null) {
+            setValueDirty(true);
+            actualList = new ArrayList();
+            this.list = new NotifyList(actualList, this);
+        } else {
+            this.list.clear();
             this.list.addAll(list);
-            // In Oracle, empty string are converted to NULL. Since an undefined property is not found at all, it is
-            // safe to assume that a retrieved NULL value should actually be an empty string.
-            for (Iterator<String> it = this.list.iterator(); it.hasNext();) {
-                if (it.next() == null) {
-                    it.remove();
-                }
+        }
+
+        // In Oracle, empty string are converted to NULL. Since an undefined property is not found at all, it is
+        // safe to assume that a retrieved NULL value should actually be an empty string.
+        for (Iterator<String> it = this.list.iterator(); it.hasNext();) {
+            if (it.next() == null) {
+                it.remove();
             }
         }
     }
@@ -244,15 +267,72 @@ public class ListProperty extends BaseProperty implements Cloneable
     }
 
     /**
-     * If getList returns a list of type AbstractNotifyOnUpdateList hibernate will for some reason always store an empty
-     * lits.  As a workaround, we let getList return an ordinary ArrayList when in hibernate.  This method is used for
-     * enabling/disabling this workaround.  FIXME: Try removing this workaround after we have upgraded hibernate.
-     * 
-     * @param useHibernateWorkaround {@literal true} if hibernate workaround for getList should be enabled.
-     * @since 4.3M2
+     * List implementation for updating dirty flag when updated.
+     *
+     * This will be accessed from ListPropertyUserType.
      */
-    public void setUseHibernateWorkaround(boolean useHibernateWorkaround)
+    public static class NotifyList extends AbstractNotifyOnUpdateList<String>
     {
-        this.useHibernateWorkaround = useHibernateWorkaround;
+
+        /** The owner list property. */
+        private ListProperty owner;
+
+        /** The dirty flag. */
+        private boolean dirty;
+
+        private List<String> actualList;
+
+        /**
+         * @param list {@see AbstractNotifyOnUpdateList}.
+         */
+        public NotifyList(List<String> list)
+        {
+            super(list);
+            this.actualList = list;
+        }
+
+        private NotifyList(List<String>list, ListProperty owner)
+        {
+            this(list);
+
+            this.owner = owner;
+        }
+
+        @Override
+        public void onUpdate()
+        {
+            setDirty();
+        }
+
+        /**
+         * @param owner The owner list property.
+         */
+        public void setOwner(ListProperty owner)
+        {
+            if (dirty) {
+                owner.setValueDirty(true);
+            }
+            this.owner = owner;
+            owner.actualList = actualList;
+        }
+
+        /**
+         * @return {@literal true} if the given argument is the instance that this list wraps.
+         */
+        public boolean isWrapper(Object collection)
+        {
+            return actualList == collection;
+        }
+
+        /**
+         * Set the dirty flag.
+         */
+        private void setDirty()
+        {
+            if (owner != null) {
+                owner.setValueDirty(true);
+            }
+            dirty = true;
+        }
     }
 }

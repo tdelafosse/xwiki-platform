@@ -39,7 +39,6 @@ import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
 import org.xwiki.component.phase.InitializationException;
 import org.xwiki.extension.Extension;
-import org.xwiki.extension.ExtensionDependency;
 import org.xwiki.extension.ExtensionId;
 import org.xwiki.extension.InstallException;
 import org.xwiki.extension.InstalledExtension;
@@ -50,13 +49,12 @@ import org.xwiki.extension.event.ExtensionEvent;
 import org.xwiki.extension.event.ExtensionInstalledEvent;
 import org.xwiki.extension.event.ExtensionUninstalledEvent;
 import org.xwiki.extension.event.ExtensionUpgradedEvent;
-import org.xwiki.extension.repository.AbstractExtensionRepository;
 import org.xwiki.extension.repository.DefaultExtensionRepositoryDescriptor;
 import org.xwiki.extension.repository.InstalledExtensionRepository;
 import org.xwiki.extension.repository.internal.RepositoryUtils;
+import org.xwiki.extension.repository.internal.local.AbstractCachedExtensionRepository;
 import org.xwiki.extension.repository.result.IterableResult;
 import org.xwiki.extension.repository.search.SearchException;
-import org.xwiki.extension.version.Version;
 import org.xwiki.extension.xar.internal.handler.XarExtensionHandler;
 import org.xwiki.extension.xar.internal.handler.packager.Packager;
 import org.xwiki.extension.xar.internal.handler.packager.XarEntry;
@@ -77,7 +75,7 @@ import org.xwiki.observation.event.Event;
 @Component
 @Singleton
 @Named(XarExtensionHandler.TYPE)
-public class XarInstalledExtensionRepository extends AbstractExtensionRepository implements
+public class XarInstalledExtensionRepository extends AbstractCachedExtensionRepository<XarInstalledExtension> implements
     InstalledExtensionRepository, Initializable
 {
     private static final List<Event> EVENTS = Arrays.<Event> asList(new ExtensionInstalledEvent(),
@@ -97,9 +95,6 @@ public class XarInstalledExtensionRepository extends AbstractExtensionRepository
      */
     @Inject
     private Logger logger;
-
-    private Map<ExtensionId, XarInstalledExtension> extensions =
-        new ConcurrentHashMap<ExtensionId, XarInstalledExtension>();
 
     private Map<String, Map<XarEntry, Set<ExtensionId>>> documentExtensions =
         new ConcurrentHashMap<String, Map<XarEntry, Set<ExtensionId>>>();
@@ -156,7 +151,7 @@ public class XarInstalledExtensionRepository extends AbstractExtensionRepository
     private void addXarExtension(InstalledExtension installedExtension) throws IOException
     {
         if (installedExtension.getNamespaces() != null) {
-            addXarExtension("", installedExtension);
+            addXarExtension(null, installedExtension);
         } else {
             for (String namespace : installedExtension.getNamespaces()) {
                 addXarExtension(XarExtensionUtils.toWiki(namespace), installedExtension);
@@ -178,11 +173,17 @@ public class XarInstalledExtensionRepository extends AbstractExtensionRepository
 
     private void addXarExtension(String wiki, XarInstalledExtension xarExtension)
     {
-        Map<XarEntry, Set<ExtensionId>> documents = this.documentExtensions.get(wiki);
+        // Cache the extension
+        addCachedExtension(xarExtension);
+
+        // Cache document related informations
+        String wikiKey = wiki != null ? wiki : "";
+
+        Map<XarEntry, Set<ExtensionId>> documents = this.documentExtensions.get(wikiKey);
 
         if (documents == null) {
             documents = new ConcurrentHashMap<XarEntry, Set<ExtensionId>>();
-            this.documentExtensions.put(wiki, documents);
+            this.documentExtensions.put(wikiKey, documents);
         }
 
         for (XarEntry entry : xarExtension.getPages()) {
@@ -199,13 +200,16 @@ public class XarInstalledExtensionRepository extends AbstractExtensionRepository
 
     private void removeXarExtension(String wiki, ExtensionId extensionId)
     {
+        // Remove document related informations
+        String wikiKey = wiki != null ? wiki : "";
+
         XarInstalledExtension xarExtension = this.extensions.get(extensionId);
 
         if (!xarExtension.isInstalled()) {
             this.extensions.remove(extensionId);
         }
 
-        Map<XarEntry, Set<ExtensionId>> documents = this.documentExtensions.get(wiki);
+        Map<XarEntry, Set<ExtensionId>> documents = this.documentExtensions.get(wikiKey);
 
         if (documents != null) {
             for (XarEntry entry : xarExtension.getPages()) {
@@ -216,6 +220,9 @@ public class XarInstalledExtensionRepository extends AbstractExtensionRepository
                 }
             }
         }
+
+        // Remove cached extension
+        removeCachedExtension(this.extensions.get(extensionId));
     }
 
     private void loadExtensions()
@@ -264,46 +271,6 @@ public class XarInstalledExtensionRepository extends AbstractExtensionRepository
         }
 
         return extensions;
-    }
-
-    // ExtensionRepository
-
-    @Override
-    public InstalledExtension resolve(ExtensionId extensionId) throws ResolveException
-    {
-        InstalledExtension extension = this.extensions.get(extensionId);
-
-        if (extension == null) {
-            throw new ResolveException("Extension [" + extensionId + "] does not exists or is not a xar extension");
-        }
-
-        return extension;
-    }
-
-    @Override
-    public InstalledExtension resolve(ExtensionDependency extensionDependency) throws ResolveException
-    {
-        InstalledExtension extension = this.installedRepository.resolve(extensionDependency);
-        extension = this.extensions.get(extension.getId());
-
-        if (extension == null) {
-            throw new ResolveException("Extension [" + extensionDependency
-                + "] does not exists or is not a xar extension");
-        }
-
-        return extension;
-    }
-
-    @Override
-    public boolean exists(ExtensionId extensionId)
-    {
-        return this.extensions.containsKey(extensionId);
-    }
-
-    @Override
-    public IterableResult<Version> resolveVersions(String id, int offset, int nb) throws ResolveException
-    {
-        return this.installedRepository.resolveVersions(id, offset, nb);
     }
 
     // LocalExtensionRepository

@@ -40,7 +40,7 @@ import org.xwiki.rendering.macro.wikibridge.WikiMacroParameterDescriptor;
 import org.xwiki.rendering.macro.wikibridge.WikiMacroVisibility;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.syntax.Syntax;
-import org.xwiki.test.AbstractComponentTestCase;
+import org.xwiki.test.jmock.AbstractComponentTestCase;
 
 /**
  * Unit tests for {@link org.xwiki.rendering.internal.macro.wikibridge.DefaultWikiMacroManager}.
@@ -96,7 +96,7 @@ public class DefaultWikiMacroManagerTest extends AbstractComponentTestCase
                 allowing(mockDocumentAccessBridge).getCurrentUser();
                 will(returnValue("dummy"));
                 allowing(mockDocumentAccessBridge).setCurrentUser("dummy");
-                allowing(mockDocumentAccessBridge).setCurrentUser(with(any(String.class)));
+                allowing(mockDocumentAccessBridge).setCurrentUser((String) with(anything()));
                 allowing(mockDocumentAccessBridge).getCurrentUserReference();
                 will(returnValue(new DocumentReference("wiki", "XWiki", "dummy")));
             }

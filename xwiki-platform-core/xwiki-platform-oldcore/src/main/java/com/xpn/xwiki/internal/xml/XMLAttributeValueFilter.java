@@ -22,7 +22,8 @@ package com.xpn.xwiki.internal.xml;
 import org.apache.ecs.filter.CharacterFilter;
 
 /**
- * A filter that can be used to encode the attribute values when serializing XML elements.
+ * A filter that can be used to encode the attribute values when serializing XML elements. It should behave exactly as
+ * {@link org.xwiki.xml.XMLUtils#escape(Object)}.
  * <p>
  * Fixes the encoding of the apostrophe character which by default is replaced with a left single quote..
  * 
@@ -42,5 +43,7 @@ public class XMLAttributeValueFilter extends CharacterFilter
     public XMLAttributeValueFilter()
     {
         addAttribute("'", "&#39;");
+        // Left curly bracket is included here to protect against {{/html}} in XWiki 2.x syntax.
+        addAttribute("{", "&#123;");
     }
 }

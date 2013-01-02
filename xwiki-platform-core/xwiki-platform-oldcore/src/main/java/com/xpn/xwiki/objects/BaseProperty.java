@@ -33,13 +33,13 @@ import org.dom4j.io.XMLWriter;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.ObjectPropertyReference;
 import org.xwiki.model.reference.ObjectReference;
+import org.xwiki.xml.XMLUtils;
 
 import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.doc.merge.CollisionException;
 import com.xpn.xwiki.doc.merge.MergeConfiguration;
 import com.xpn.xwiki.doc.merge.MergeResult;
-import com.xpn.xwiki.doc.XWikiDocument;
-import com.xpn.xwiki.web.Utils;
 
 /**
  * @version $Id$
@@ -61,7 +61,7 @@ public class BaseProperty<R extends EntityReference> extends BaseElement<R> impl
     /**
      * The owner document, if this object was obtained from a document.
      */
-    private XWikiDocument ownerDocument;
+    private transient XWikiDocument ownerDocument;
 
     @Override
     protected R createReference()
@@ -151,12 +151,25 @@ public class BaseProperty<R extends EntityReference> extends BaseElement<R> impl
     {
         BaseProperty<R> property = (BaseProperty<R>) super.clone();
 
-        property.setObject(getObject());
+        property.ownerDocument = null;
+
+        cloneInternal(property);
 
         property.isValueDirty = isValueDirty;
         property.ownerDocument = ownerDocument;
 
+        property.setObject(getObject());
+
         return property;
+    }
+
+    /**
+     * Subclasses override this to copy values during cloning.
+     *
+     * @param clone The cloned value.
+     */
+    protected void cloneInternal(BaseProperty clone)
+    {
     }
 
     public Object getValue()
@@ -181,7 +194,7 @@ public class BaseProperty<R extends EntityReference> extends BaseElement<R> impl
     @Override
     public String toFormString()
     {
-        return Utils.formEncode(toText());
+        return XMLUtils.escape(toText());
     }
 
     public String toText()
@@ -254,7 +267,7 @@ public class BaseProperty<R extends EntityReference> extends BaseElement<R> impl
                 // XXX: collision between current and new
                 mergeResult.error(new CollisionException("Collision found on property [" + getName()
                     + "] between from value [" + getValue() + "] and to [" + newValue + "]"));
-            } else if (ObjectUtils.equals(previousValue, getValue())) {
+            } else if (!ObjectUtils.equals(newValue, getValue())) {
                 mergeValue(previousValue, newValue, mergeResult);
             }
         }

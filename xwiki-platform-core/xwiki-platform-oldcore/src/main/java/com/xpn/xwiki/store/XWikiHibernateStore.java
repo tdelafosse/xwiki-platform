@@ -68,9 +68,9 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.model.reference.SpaceReference;
 import org.xwiki.model.reference.WikiReference;
-import org.xwiki.observation.event.Event;
 import org.xwiki.observation.EventListener;
 import org.xwiki.observation.ObservationManager;
+import org.xwiki.observation.event.Event;
 import org.xwiki.query.QueryManager;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.store.UnexpectedException;
@@ -502,6 +502,7 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
             if (doc.isContentDirty() || doc.isMetaDataDirty()) {
                 Date ndate = new Date();
                 doc.setDate(ndate);
+                doc.setAuthorReference(context.getUserReference());
                 if (doc.isContentDirty()) {
                     doc.setContentUpdateDate(ndate);
                     doc.setContentAuthorReference(doc.getAuthorReference());
@@ -859,6 +860,9 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
                 }
             }
 
+            doc.setContentDirty(false);
+            doc.setMetaDataDirty(false);
+
             // We need to ensure that the loaded document becomes the original document
             doc.setOriginalDocument(doc.clone());
 
@@ -883,9 +887,6 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
                 monitor.endTimer("hibernate");
             }
         }
-
-        doc.setContentDirty(false);
-        doc.setMetaDataDirty(false);
 
         LOGGER.debug("Loaded XWikiDocument: " + doc.getDocumentReference());
 
@@ -1418,10 +1419,6 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
             query.setLong("id", property.getId());
             query.setString("name", property.getName());
 
-            if (property instanceof ListProperty) {
-                addListPropertyWorkaroundHandler(property);
-            }
-
             if (query.uniqueResult() == null) {
                 session.save(property);
             } else {
@@ -1699,7 +1696,8 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
 
     private void registerLogoutListener()
     {
-        this.observationManager.addListener(new EventListener() {
+        this.observationManager.addListener(new EventListener()
+        {
             private final Event ev = new ActionExecutingEvent();
 
             public String getName()
@@ -2468,7 +2466,8 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
             XWikiDocument doc =
                 new XWikiDocument(new DocumentReference(context.getDatabase(), (String) result[0], (String) result[1]));
             if (checkRight) {
-                if (!context.getWiki().getRightService().hasAccessLevel("view", context.getUser(), doc.getFullName(), context)) {
+                if (!context.getWiki().getRightService()
+                    .hasAccessLevel("view", context.getUser(), doc.getFullName(), context)) {
                     continue;
                 }
             }
@@ -2859,6 +2858,7 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
     @Override
     public List<String> getTranslationList(XWikiDocument doc, XWikiContext context) throws XWikiException
     {
+        // Note that the query is made to work with Oracle which treats empty strings as null.
         String hql = "select doc.language from XWikiDocument as doc where doc.space = ? and doc.name = ? "
             + "and (doc.language <> '' or (doc.language is not null and '' is null))";
         ArrayList<String> params = new ArrayList<String>();
