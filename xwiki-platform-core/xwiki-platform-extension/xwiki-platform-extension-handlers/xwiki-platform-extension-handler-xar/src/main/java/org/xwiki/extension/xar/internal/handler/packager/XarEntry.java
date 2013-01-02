@@ -22,6 +22,7 @@ package org.xwiki.extension.xar.internal.handler.packager;
 import java.util.Locale;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.ObjectUtils;
 import org.xwiki.model.reference.EntityReference;
 
 /**
@@ -102,7 +103,7 @@ public class XarEntry
 
             equals =
                 getDocumentReference().equals(xarEntry.getDocumentReference())
-                    && getLocale().equals(xarEntry.getLocale());
+                    && ObjectUtils.equals(getLocale(), xarEntry.getLocale());
         }
 
         return equals;

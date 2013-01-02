@@ -682,7 +682,7 @@ public class XarExtensionHandlerTest extends AbstractBridgedComponentTestCase
     }
 
     @Test
-    public void testInstallOnRoot() throws Throwable
+    public void testInstallAndUninstallOnRoot() throws Throwable
     {
         getMockery().checking(new Expectations()
         {
