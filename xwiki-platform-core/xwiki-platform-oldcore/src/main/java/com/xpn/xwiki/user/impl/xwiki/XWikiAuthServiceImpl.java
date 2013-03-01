@@ -184,6 +184,7 @@ public class XWikiAuthServiceImpl extends AbstractXWikiAuthService
                 if (xwiki.Param("xwiki.authentication.encryptionmode") != null) {
                     persistent.setEncryptionMode(xwiki.Param("xwiki.authentication.encryptionmode"));
                 }
+                //persistent.setEncryptionMode("CBC");
 
                 if (xwiki.Param("xwiki.authentication.encryptionpadding") != null) {
                     persistent.setEncryptionPadding(xwiki.Param("xwiki.authentication.encryptionpadding"));
@@ -196,6 +197,11 @@ public class XWikiAuthServiceImpl extends AbstractXWikiAuthService
                 if (xwiki.Param("xwiki.authentication.encryptionKey") != null) {
                     persistent.setEncryptionKey(xwiki.Param("xwiki.authentication.encryptionKey"));
                 }
+               
+                /*
+                if (xwiki.Param("xwiki.authentication.passwordEncryptionKey") != null) {
+                    persistent.setPasswordEncryptionKey(xwiki.Param("xwiki.authentication.passwordEncryptionKey"));
+                }*/
 
                 sconfig.setPersistentLoginManager(persistent);
 

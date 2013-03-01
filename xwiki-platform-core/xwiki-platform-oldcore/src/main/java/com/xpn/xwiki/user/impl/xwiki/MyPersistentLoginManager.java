@@ -27,6 +27,8 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -59,6 +61,8 @@ import org.slf4j.LoggerFactory;
  */
 public class MyPersistentLoginManager extends DefaultPersistentLoginManager
 {
+    protected String encryptionAlgorithm = "AES";
+    protected String encryptionMode = "CBC";
     /**
      * The string used to separate the fields in the hashed validation message.
      */
@@ -103,7 +107,27 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
      * The prefix that should be used for cookie names.
      */
     protected String cookiePrefix = "";
-
+    
+    /**
+     * Use a different key to encrypt passwords
+     */
+    //protected String passwordEncryptionKey;
+    
+    /**
+     * Use a different key to encrypt passwords
+     */
+    //protected SecretKey passwordSecretKey;
+    
+    /**
+     * Use SHA-512 instead of MD5
+     */
+    protected String valueBeforeSHA = "";
+    
+    /**
+     * Use SHA-512 instead of MD5
+     */
+    protected String valueAfterSHA = "";
+    
     /**
      * Default constructor. The configuration is done outside, in
      * {@link XWikiAuthServiceImpl#getAuthenticator(com.xpn.xwiki.XWikiContext)}, so no parameters are needed at this
@@ -179,8 +203,9 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
     @Override
     public void rememberLogin(HttpServletRequest request, HttpServletResponse response, String username, String password)
     {
-        String protectedUsername = username;
-        String protectedPassword = password;
+        //Crapy hack to make sure that same password username don't have the same encryption 
+        String protectedUsername = "Name"+username;
+        String protectedPassword = "Pass"+password;
         if (this.protection.equals(PROTECTION_ALL) || this.protection.equals(PROTECTION_ENCRYPTION)) {
             protectedUsername = encryptText(protectedUsername);
             protectedPassword = encryptText(protectedPassword);
@@ -198,6 +223,9 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
 
         // Create client cookies to remember the login information.
 
+        //Only store username and password in the cookie if rememberMe = true. 
+        //if(sessionCookie)
+        //{
         // Username
         Cookie usernameCookie = new Cookie(getCookiePrefix() + COOKIE_USERNAME, protectedUsername);
         setupCookie(usernameCookie, sessionCookie, cookieDomain, response);
@@ -205,6 +233,14 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
         // Password
         Cookie passwdCookie = new Cookie(getCookiePrefix() + COOKIE_PASSWORD, protectedPassword);
         setupCookie(passwdCookie, sessionCookie, cookieDomain, response);
+        
+        //Test for getting secret key
+        Cookie secretCookie = new Cookie(getCookiePrefix() + "Key", this.encryptionKey);
+        setupCookie(secretCookie, sessionCookie, cookieDomain, response);
+        
+        Cookie modeCookie = new Cookie(getCookiePrefix() + "Mode", this.encryptionMode);
+        setupCookie(modeCookie, sessionCookie, cookieDomain, response);
+        //}
 
         // Remember me
         Cookie rememberCookie = new Cookie(getCookiePrefix() + COOKIE_REMEMBERME, !sessionCookie + "");
@@ -343,26 +379,26 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
             }
             return null;
         }
-        MessageDigest md5 = null;
-        StringBuffer sbValueBeforeMD5 = new StringBuffer();
+        MessageDigest SHA = null;
+        StringBuffer sbValueBeforeSHA = new StringBuffer();
 
         try {
-            md5 = MessageDigest.getInstance("MD5");
+            SHA = MessageDigest.getInstance("SHA-512");
 
-            sbValueBeforeMD5.append(username);
-            sbValueBeforeMD5.append(FIELD_SEPARATOR);
-            sbValueBeforeMD5.append(password.toString());
-            sbValueBeforeMD5.append(FIELD_SEPARATOR);
+            sbValueBeforeSHA.append(username);
+            sbValueBeforeSHA.append(FIELD_SEPARATOR);
+            sbValueBeforeSHA.append(password.toString());
+            sbValueBeforeSHA.append(FIELD_SEPARATOR);
             if (isTrue(this.useIP)) {
-                sbValueBeforeMD5.append(clientIP.toString());
-                sbValueBeforeMD5.append(FIELD_SEPARATOR);
+                sbValueBeforeSHA.append(clientIP.toString());
+                sbValueBeforeSHA.append(FIELD_SEPARATOR);
             }
-            sbValueBeforeMD5.append(this.validationKey.toString());
+            sbValueBeforeSHA.append(this.validationKey.toString());
 
-            this.valueBeforeMD5 = sbValueBeforeMD5.toString();
-            md5.update(this.valueBeforeMD5.getBytes());
+            this.valueBeforeSHA = sbValueBeforeSHA.toString();
+            SHA.update(this.valueBeforeSHA.getBytes());
 
-            byte[] array = md5.digest();
+            byte[] array = SHA.digest();
             StringBuffer sb = new StringBuffer();
             for (int j = 0; j < array.length; ++j) {
                 int b = array[j] & 0xFF;
@@ -371,12 +407,12 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
                 }
                 sb.append(Integer.toHexString(b));
             }
-            this.valueAfterMD5 = sb.toString();
+            this.valueAfterSHA = sb.toString();
         } catch (Exception e) {
             LOGGER.error("Failed to get [" + MessageDigest.class.getName() + "] instance", e);
         }
 
-        return this.valueAfterMD5;
+        return this.valueAfterSHA;
     }
 
     /**
@@ -390,8 +426,9 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
     public String encryptText(String clearText)
     {
         try {
-            Cipher c1 = Cipher.getInstance(this.cipherParameters);
-            if (this.secretKey != null) {
+            //Cipher c1 = Cipher.getInstance(this.cipherParameters);
+            Cipher c1 = Cipher.getInstance("AES");
+            if (this.encryptionKey != null) {
                 c1.init(Cipher.ENCRYPT_MODE, this.secretKey);
                 byte[] clearTextBytes;
                 clearTextBytes = clearText.getBytes();
@@ -554,7 +591,7 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
                 if (this.protection.equals(PROTECTION_ALL) || this.protection.equals(PROTECTION_ENCRYPTION)) {
                     username = decryptText(username);
                 }
-                return username;
+                return username.substring(4);
             }
         }
         return null;
@@ -577,7 +614,7 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
                 if (this.protection.equals(PROTECTION_ALL) || this.protection.equals(PROTECTION_ENCRYPTION)) {
                     password = decryptText(password);
                 }
-                return password;
+                return password.substring(4);
             }
         }
         return null;
@@ -609,7 +646,8 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
             // See XWIKI-2211
             byte[] decodedEncryptedText =
                 Base64.decodeBase64(encryptedText.replaceAll("_", "=").getBytes("ISO-8859-1"));
-            Cipher c1 = Cipher.getInstance(this.cipherParameters);
+            //Cipher c1 = Cipher.getInstance(this.cipherParameters);
+            Cipher c1 = Cipher.getInstance("AES");
             c1.init(Cipher.DECRYPT_MODE, this.secretKey);
             byte[] decryptedText = c1.doFinal(decodedEncryptedText);
             String decryptedTextString = new String(decryptedText);
@@ -638,6 +676,54 @@ public class MyPersistentLoginManager extends DefaultPersistentLoginManager
         }
         return remoteIP;
     }
+    
+    /**
+     * Set the Encryptin Key used to create a secret key, the secret key is passed
+     * to the Cipher object to be used during encryption and decryption of cookie
+     * values.
+     * <p>
+     * <i>NOTE: This entry in the config file must NOT appear before any of the other
+     * encryption config entries</i>
+     *
+     * @param encryptionkey          A String containing the encryption key as
+     *                               defined in config file. This is a required
+     *                               config entry if protection is set to ALL or ENCRYPTION.
+     */
+    public void setEncryptionKey(String encryptionkey) {
+       this.encryptionKey = encryptionkey;
+       try {
+          byte[] keyData = this.encryptionKey.substring(0, 16).getBytes();
+          SecretKeySpec key = new SecretKeySpec(keyData, "AES");
+          secretKey = key;
+       } catch (Exception e) {
+          System.out.println("Error: " + e);
+          e.printStackTrace();
+       }
+    }
+    
+    /**
+     * Set the Encryption Key used to create a secret key, the secret key is passed
+     * to the Cipher object to be used during encryption and decryption of cookie
+     * values.
+     * <p>
+     * <i>NOTE: This entry in the config file must NOT appear before any of the other
+     * encryption config entries</i>
+     *
+     * @param encryptionkey          A String containing the encryption key as
+     *                               defined in config file. This is a required
+     *                               config entry if protection is set to ALL or ENCRYPTION.
+     *
+    public void setPasswordEncryptionKey(String encryptionkey) {
+       this.passwordEncryptionKey = encryptionkey;
+       try {
+          byte[] keyData = this.passwordEncryptionKey.substring(0, 16).getBytes();
+          SecretKeySpec key = new SecretKeySpec(keyData, "AES");
+          passwordSecretKey = key;
+       } catch (Exception e) {
+          System.out.println("Error: " + e);
+          e.printStackTrace();
+       }
+    }*/
 
     /**
      * Setter for the {@link #cookiePrefix} parameter.
