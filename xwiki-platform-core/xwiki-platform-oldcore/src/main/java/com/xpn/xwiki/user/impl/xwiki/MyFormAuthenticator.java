@@ -207,6 +207,7 @@ public class MyFormAuthenticator extends FormAuthenticator implements XWikiAuthe
                 // did the user request that their login be persistent?
                 if (rememberme != null) {
                     // remember login
+                    // THIS HAPPENS EVEN IF REMEMBER ME = FALSE (and so probably all the time)
                     this.persistentLoginManager.rememberLogin(request, response, username, password);
                 } else {
                     // forget login
