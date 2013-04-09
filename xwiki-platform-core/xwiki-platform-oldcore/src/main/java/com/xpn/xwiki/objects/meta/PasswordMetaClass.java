@@ -55,6 +55,11 @@ public class PasswordMetaClass extends StringMetaClass
     public static final String HASH = "Hash";
 
     /**
+     * Name of the salt field.
+     */
+    public static final String SALT = "salt";
+    
+    /**
      * The string used to separate the possible values of a static list. It is used for instance to separate the various
      * storage types for {@link #ALGORITHM_KEY}.
      */
@@ -76,7 +81,7 @@ public class PasswordMetaClass extends StringMetaClass
         StaticListClass storageTypeClass = new StaticListClass(this);
         storageTypeClass.setName("storageType");
         storageTypeClass.setPrettyName("Storage type");
-        storageTypeClass.setValues(HASH + SEPARATOR + CLEAR);
+        storageTypeClass.setValues(HASH + SEPARATOR + ENCRYPTED + SEPARATOR + CLEAR);
         storageTypeClass.setRelationalStorage(false);
         storageTypeClass.setDisplayType("select");
         storageTypeClass.setMultiSelect(false);
