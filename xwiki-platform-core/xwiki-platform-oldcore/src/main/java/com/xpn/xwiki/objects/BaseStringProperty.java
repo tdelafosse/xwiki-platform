@@ -19,14 +19,8 @@
  */
 package com.xpn.xwiki.objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.xpn.xwiki.XWikiContext;
-import com.xpn.xwiki.api.Property;
 import com.xpn.xwiki.doc.merge.MergeResult;
 import com.xpn.xwiki.internal.merge.MergeUtils;
-import com.xpn.xwiki.web.Utils;
 
 /**
  * Base string XProperty which all types of string XProperties extend. $Id$
@@ -35,11 +29,6 @@ public class BaseStringProperty extends BaseProperty
 {
     /** The value of the string. */
     private String value;
-    
-    /**
-     * Log4J logger object to log messages in this class.
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaseStringProperty.class);
 
     @Override
     public String getValue()

@@ -28,8 +28,7 @@ import com.xpn.xwiki.objects.BaseProperty;
  * @version $Id$
  */
 public class Property extends Element
-{
-   
+{  
     /**
      * The Constructor.
      *
