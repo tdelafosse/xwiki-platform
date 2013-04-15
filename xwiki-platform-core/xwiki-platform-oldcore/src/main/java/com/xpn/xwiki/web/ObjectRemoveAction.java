@@ -75,7 +75,10 @@ public class ObjectRemoveAction extends XWikiAction
         }
 
         doc.removeObject(obj);
-        doc.setAuthor(username);
+        // Consider objects not being content.
+        doc.setContentDirty(false);
+        // if contentDirty is false, in order for the change to create a new version metaDataDirty must be true.
+        doc.setMetaDataDirty(true);;
         xwiki.saveDocument(doc, context.getMessageTool().get("core.comment.deleteObject"), true, context);
 
         if (Utils.isAjaxRequest(context)) {
