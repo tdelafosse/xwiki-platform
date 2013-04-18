@@ -67,18 +67,17 @@ public class ObjectRemoveAction extends XWikiAction
 
         XWiki xwiki = context.getWiki();
         XWikiResponse response = context.getResponse();
-        String username = context.getUser();
         XWikiDocument doc = context.getDoc();
         BaseObject obj = getObject(doc, context);
         if (obj == null) {
             return true;
         }
 
-        doc.removeObject(obj);
+        doc.removeXObject(obj);
         // Consider objects not being content.
         doc.setContentDirty(false);
         // if contentDirty is false, in order for the change to create a new version metaDataDirty must be true.
-        doc.setMetaDataDirty(true);;
+        doc.setMetaDataDirty(true);
         xwiki.saveDocument(doc, context.getMessageTool().get("core.comment.deleteObject"), true, context);
 
         if (Utils.isAjaxRequest(context)) {
