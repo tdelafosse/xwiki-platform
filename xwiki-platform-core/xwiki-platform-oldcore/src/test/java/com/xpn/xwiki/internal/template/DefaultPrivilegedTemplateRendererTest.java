@@ -53,7 +53,7 @@ public class DefaultPrivilegedTemplateRendererTest
     @Test
     public void ordinaryTemplate() throws Exception
     {
-        PrivilegedTemplateRenderer privilegedTemplateRenderer = mocker.getMockedComponent();
+        PrivilegedTemplateRenderer privilegedTemplateRenderer = mocker.getComponentUnderTest();
 
         final XWikiContext context = mock(XWikiContext.class);
 
@@ -78,7 +78,7 @@ public class DefaultPrivilegedTemplateRendererTest
     @Test
     public void privilegedTemplate() throws Exception
     {
-        PrivilegedTemplateRenderer privilegedTemplateRenderer = mocker.getMockedComponent();
+        PrivilegedTemplateRenderer privilegedTemplateRenderer = mocker.getComponentUnderTest();
 
         final XWikiContext context = mock(XWikiContext.class);
 

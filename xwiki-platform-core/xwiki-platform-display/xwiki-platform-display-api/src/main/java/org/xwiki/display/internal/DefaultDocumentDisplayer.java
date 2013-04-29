@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
 import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.manager.ComponentLookupException;
@@ -58,7 +59,13 @@ public class DefaultDocumentDisplayer implements DocumentDisplayer
      */
     @Inject
     private ComponentManager componentManager;
-
+    
+    /**
+     * Logger.
+     */
+    @Inject
+    private Logger logger;
+    
     @Override
     public XDOM display(DocumentModelBridge document, DocumentDisplayerParameters parameters,
                         DocumentModelBridge contentDocument)
@@ -66,8 +73,10 @@ public class DefaultDocumentDisplayer implements DocumentDisplayer
         String syntaxId = document.getSyntax().toIdString();
         DocumentDisplayer displayer;
         if (parameters.isTitleDisplayed()) {
+            logger.warn("Entering title display");
             try {
                 displayer = componentManager.getInstance(DocumentDisplayer.class, "title/" + syntaxId);
+                logger.warn("Displayer : " + displayer.toString());
             } catch (ComponentLookupException e) {
                 displayer = titleDisplayer;
             }
