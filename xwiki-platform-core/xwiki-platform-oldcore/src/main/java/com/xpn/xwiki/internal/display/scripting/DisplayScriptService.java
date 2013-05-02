@@ -141,6 +141,9 @@ public class DisplayScriptService implements ScriptService
         }
         DocumentModelBridge documentModel = getDocument(document);
         contentDocumentController.pushContentDocument(documentModel);
+        if (documentModel == null) {
+            logger.warn("documentModel is null !");
+        }
         try {
             DocumentDisplayer displayer = componentManager.getInstance(DocumentDisplayer.class, displayerHint);
             return renderXDOM(displayer.display(getDocument(document), displayerParameters), outputSyntax);
@@ -223,6 +226,7 @@ public class DisplayScriptService implements ScriptService
      */
     public String title(Document document, Map<String, Object> parameters)
     {
+        logger.warn("Entering title with document : " + document.getFullName());
         Map<String, Object> actualParameters = new HashMap<String, Object>(parameters);
         DocumentDisplayerParameters displayerParameters =
             (DocumentDisplayerParameters) parameters.get(DISPLAYER_PARAMETERS_KEY);

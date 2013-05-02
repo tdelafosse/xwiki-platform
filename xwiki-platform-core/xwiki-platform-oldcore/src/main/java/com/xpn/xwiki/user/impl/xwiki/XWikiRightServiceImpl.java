@@ -938,6 +938,9 @@ public class XWikiRightServiceImpl implements XWikiRightService
 
     private boolean hasProgrammingRights(DocumentReference user, XWikiContext context)
     {
+        if (getAuth().grantProgrammingRight() && !getAuth().isPrivileged()) {
+            LOGGER.warn("PR granted but is not privileged");
+        }
         if (!getAuth().isPrivileged()) {
             LOGGER.debug("Programming rights denied because privileged mode is disabled.");
             return false;

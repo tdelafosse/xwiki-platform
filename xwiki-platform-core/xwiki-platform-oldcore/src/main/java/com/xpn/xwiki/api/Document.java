@@ -152,9 +152,12 @@ public class Document extends Api
      */
     public XWikiDocument getDocument()
     {
+        LOGGER.warn("Entering getDocument()");
         if (hasProgrammingRights()) {
+        	LOGGER.warn("We have PR !");
             return this.doc;
         } else {
+        	LOGGER.warn("We don't have PR ! Right service is : " + this.context.getWiki().getRightService());
             return null;
         }
     }

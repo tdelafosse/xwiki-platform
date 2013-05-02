@@ -359,6 +359,7 @@ public class XWikiCachingRightService implements XWikiRightService
     @Override
     public boolean hasProgrammingRights(XWikiContext context)
     {
+        LOGGER.warn("has PR : securityStack = " + getAuth().toString());
         DocumentReference contentAuthor = getAuth().getContentAuthor();
 
         WikiReference wikiReference = new WikiReference(context.getDatabase());
