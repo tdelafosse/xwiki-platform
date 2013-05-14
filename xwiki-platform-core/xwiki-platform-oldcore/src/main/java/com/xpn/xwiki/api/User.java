@@ -164,7 +164,13 @@ public class User extends Api
     {
         EntityReference userReference = REFERENCE_RESOLVER.resolve(user.getUser());
         EntityReference docReference = getXWikiContext().getDoc().getDocumentReference();
-        if (userReference.equals(getXWikiContext().getUserReference()) && userReference.equals(docReference)) {
+        //Make sure that the user we check the password for is the current user.
+        boolean isAuthorized = userReference.equals(getXWikiContext().getUserReference());
+        //Make sure that the page has PR or that it is the user profile page.
+        if (!hasProgrammingRights() && !userReference.equals(docReference)) {
+            isAuthorized = false;
+        }
+        if (isAuthorized) {
             try {
                 boolean result = false;
                 
