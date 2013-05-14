@@ -89,6 +89,7 @@ import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.api.Document;
 import com.xpn.xwiki.api.PropertyClass;
+import com.xpn.xwiki.api.User;
 import com.xpn.xwiki.api.XWiki;
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.BaseProperty;
@@ -102,6 +103,7 @@ import com.xpn.xwiki.objects.classes.ListClass;
  */
 public class DomainObjectFactory
 {
+	
     public static Xwiki createXWikiRoot(ObjectFactory objectFactory, URI baseUri, String version)
     {
         Xwiki xwiki = objectFactory.createXwiki().withVersion(version);
@@ -750,6 +752,7 @@ public class DomainObjectFactory
                 attribute.setName(baseProperty.getName());
 
                 /* Check for null values in order to prevent NPEs */
+               
                 if (baseProperty.getValue() != null) {
                     attribute.setValue(baseProperty.getValue().toString());
                 } else {
@@ -783,7 +786,11 @@ public class DomainObjectFactory
 
             property.setName(propertyClass.getName());
             property.setType(propertyClass.getClassType());
-            if (xwikiObject.get(propertyClass.getName()) != null) {
+            Boolean isPassword = "Password".equals(propertyClass.getClassType());
+            if(isPassword) {
+            	property.setValue("********");
+            }
+            else if (xwikiObject.get(propertyClass.getName()) != null) {
                 property.setValue(xwikiObject.get(propertyClass.getName()).toFormString());
             } else {
                 property.setValue("");
