@@ -1,0 +1,3 @@
+500:org.xwiki.rendering.internal.macro.html.HTMLMacro
+500:org.xwiki.rendering.internal.macro.html.HTMLMacroXHTMLRenderer
+500:org.xwiki.rendering.internal.macro.html.HTMLMacroXHTMLRendererFactory
