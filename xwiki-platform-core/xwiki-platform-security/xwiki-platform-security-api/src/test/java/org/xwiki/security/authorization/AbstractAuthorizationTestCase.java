@@ -71,12 +71,15 @@ public abstract class AbstractAuthorizationTestCase
     /** VIEW, EDIT, COMMENT, DELETE, REGISTER, LOGIN, ADMIN, PROGRAM. */
     protected static final RightSet ALL_RIGHTS = new RightSet();
 
-    /** VIEW, EDIT, COMMENT, DELETE, REGISTER, LOGIN, ADMIN. */
+    /** VIEW, EDIT, COMMENT, DELETE, REGISTER, LOGIN, SCRIPT, ADMIN. */
     protected static final RightSet ALL_RIGHTS_EXCEPT_PROGRAMING = new RightSet();
 
-    /** VIEW, EDIT, COMMENT, DELETE, REGISTER, LOGIN. */
+    /** VIEW, EDIT, COMMENT, DELETE, REGISTER, LOGIN, SCRIPT. */
     protected static final RightSet ALL_RIGHTS_EXCEPT_ADMIN = new RightSet();
 
+    /** VIEW, EDIT, COMMENT, DELETE, REGISTER, LOGIN. */
+    protected static final RightSet ALL_RIGHTS_EXCEPT_SCRIPT = new RightSet();
+    
     /** VIEW, EDIT, COMMENT, DELETE, ADMIN. */
     protected static final RightSet ALL_SPACE_RIGHTS = new RightSet();
 
@@ -94,11 +97,14 @@ public abstract class AbstractAuthorizationTestCase
                     ALL_RIGHTS_EXCEPT_PROGRAMING.add(right);
                     if (right != ADMIN) {
                         ALL_RIGHTS_EXCEPT_ADMIN.add(right);
-                        if (right != LOGIN && right != REGISTER) {
-                            ALL_DOCUMENT_RIGHTS.add(right);
-                        }
-                        if (right != DELETE) {
-                            DEFAULT_DOCUMENT_RIGHTS.add(right);
+                        if(right != Right.SCRIPT) {
+                        	ALL_RIGHTS_EXCEPT_SCRIPT.add(right);
+                            if (right != LOGIN && right != REGISTER) {
+                                ALL_DOCUMENT_RIGHTS.add(right);
+                            }
+                            if (right != DELETE) {
+                                DEFAULT_DOCUMENT_RIGHTS.add(right);
+                            }
                         }
                     }
                     if (right != LOGIN && right != REGISTER) {

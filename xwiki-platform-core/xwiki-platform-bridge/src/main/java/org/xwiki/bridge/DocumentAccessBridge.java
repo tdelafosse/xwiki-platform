@@ -579,6 +579,14 @@ public interface DocumentAccessBridge
      * @since 2.2M1
      */
     boolean isDocumentEditable(DocumentReference documentReference);
+    
+    /**
+     * 
+     * @param documentReference the name of the document to check script rights for.
+     * @return True if current user has 'scripting' rights on the target document.
+     * @since 5.1M1
+     */
+    boolean isDocumentScriptable(DocumentReference documentReference);
 
     /**
      * @return true if the current document's author has programming rights.

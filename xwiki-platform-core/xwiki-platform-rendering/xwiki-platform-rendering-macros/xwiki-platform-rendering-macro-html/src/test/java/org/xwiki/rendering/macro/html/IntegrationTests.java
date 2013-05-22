@@ -50,7 +50,9 @@ public class IntegrationTests
 				componentManager.registerMockComponent(mockery, ConfigurationSource.class, "xwikiproperties");
 
         mockery.checking(new Expectations() {{
-            allowing(dab).hasProgrammingRights(); 
+        	allowing(dab).getCurrentDocumentReference();
+    		will(returnValue(null));
+            allowing(dab).isDocumentScriptable(null);
             will(returnValue(true));
             allowing(configuration).getProperty(TAG_PROPERTY, defaultTags);
             will(returnValue(defaultTags));

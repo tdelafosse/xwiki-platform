@@ -59,6 +59,9 @@ public class Right implements RightDescription, Serializable, Comparable<Right>
     /** Imply rights provided to creator of a document. */
     public static final Right CREATOR;
 
+    /** The script access right. */
+    public static final Right SCRIPT;
+    
     /** The Admin access right. */
     public static final Right ADMIN;
 
@@ -128,11 +131,14 @@ public class Right implements RightDescription, Serializable, Comparable<Right>
         REGISTER = new Right("register",    ALLOW,  ALLOW, true,  null, WIKI_ONLY          , false);
         COMMENT  = new Right("comment",     ALLOW,  DENY,  true,  null, WIKI_SPACE_DOCUMENT, false);
 
+        SCRIPT  = new Right("scripting", DENY,   ALLOW, false,
+                new RightSet(LOGIN, VIEW, EDIT, DELETE, REGISTER, COMMENT), WIKI_SPACE          , true);
+        
         ADMIN    = new Right("admin",       DENY,   ALLOW, false,
-            new RightSet(LOGIN, VIEW, EDIT, DELETE, REGISTER, COMMENT), WIKI_SPACE         , true);
-
+            new RightSet(LOGIN, VIEW, EDIT, DELETE, REGISTER, COMMENT, SCRIPT), WIKI_SPACE      , true);
+        
         PROGRAM  = new Right("programming", DENY,   ALLOW, false,
-            new RightSet(LOGIN, VIEW, EDIT, DELETE, REGISTER, COMMENT, ADMIN), FARM_ONLY   , true);
+            new RightSet(LOGIN, VIEW, EDIT, DELETE, REGISTER, COMMENT, SCRIPT, ADMIN), FARM_ONLY, true);
 
         ILLEGAL  = new Right(ILLEGAL_RIGHT_NAME, DENY, DENY, false, null, null             , false);
     }

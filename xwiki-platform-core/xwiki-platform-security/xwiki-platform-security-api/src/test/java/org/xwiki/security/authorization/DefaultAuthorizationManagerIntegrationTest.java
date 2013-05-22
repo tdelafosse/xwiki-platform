@@ -345,7 +345,7 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
             null, getXDoc("an empty main wiki", "anySpace"));
 
         // SuperAdmin access on main wiki
-        assertAccess(new RightSet(VIEW, EDIT, COMMENT, DELETE, CREATOR, REGISTER, LOGIN, ADMIN, PROGRAM, ILLEGAL),
+        assertAccess(new RightSet(VIEW, EDIT, COMMENT, DELETE, CREATOR, REGISTER, LOGIN, Right.SCRIPT, ADMIN, PROGRAM, ILLEGAL),
             SUPERADMIN, getXDoc("an empty main wiki", "anySpace"));
 
         // Any Global user without access rules on main wiki
@@ -361,7 +361,7 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
             null, getDoc("an empty sub wiki", "anySpace", "any SubWiki"));
 
         // SuperAdmin access on sub wiki
-        assertAccess(new RightSet(VIEW, EDIT, COMMENT, DELETE, CREATOR, REGISTER, LOGIN, ADMIN, PROGRAM, ILLEGAL),
+        assertAccess(new RightSet(VIEW, EDIT, COMMENT, DELETE, CREATOR, REGISTER, LOGIN, Right.SCRIPT, ADMIN, PROGRAM, ILLEGAL),
             SUPERADMIN, getDoc("an empty sub wiki", "anySpace", "any SubWiki"));
 
         // Any Global user without access rules on sub wiki
@@ -436,9 +436,9 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
         assertAccess(null,                         getUser("userA", "wikiDenyA"), getDoc("docDenyA",     "spaceAllowANoAdmin", "wikiDenyA"));
         assertAccess(ALL_DOCUMENT_RIGHTS,          getUser("userA", "wikiDenyA"), getDoc("docAllowA",    "any space",   "wikiDenyA"));
 
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getUser("userA", "wikiAllowNoAdminA"), getDoc("any document", "any space",  "wikiAllowNoAdminA"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getUser("userA", "wikiAllowNoAdminA"), getDoc("any document", "any space",  "wikiAllowNoAdminA"));
         assertAccess(new RightSet(LOGIN, REGISTER), getUser("userA", "wikiAllowNoAdminA"), getDoc("any document", "spaceDenyA", "wikiAllowNoAdminA"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getUser("userA", "wikiAllowNoAdminA"), getDoc("docAllowA",    "spaceDenyA", "wikiAllowNoAdminA"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getUser("userA", "wikiAllowNoAdminA"), getDoc("docAllowA",    "spaceDenyA", "wikiAllowNoAdminA"));
         assertAccess(new RightSet(LOGIN, REGISTER), getUser("userA", "wikiAllowNoAdminA"), getDoc("docDenyA",     "any space",  "wikiAllowNoAdminA"));
     }
 
@@ -447,15 +447,15 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
     {
         initialiseWikiMock("inheritancePolicyForNoAdminFarmAccess");
 
-        // Main wiki allowing all but admin access to A
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getXDoc("any document", "any space"));
+        // Main wiki allowing all but admin and script access to A
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getXDoc("any document", "any space"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getXDoc("any document", "spaceDenyA"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getXDoc("docAllowA",    "spaceDenyA"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getXDoc("docAllowA",    "spaceDenyA"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getXDoc("docDenyA",     "any space"));
 
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("any document", "any space",  "wikiNoRules"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("any document", "any space",  "wikiNoRules"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getDoc("any document", "spaceDenyA", "wikiNoRules"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("docAllowA",    "spaceDenyA", "wikiNoRules"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("docAllowA",    "spaceDenyA", "wikiNoRules"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getDoc("docDenyA",     "any space",  "wikiNoRules"));
 
         assertAccess(null,                          getXUser("userA"), getDoc("any document", "any space",   "wikiDenyA"));
@@ -480,9 +480,9 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
         assertAccess(null,                          getXUser("userA"), getDoc("docDenyA",     "spaceAllowA", "wikiNoRules"));
         assertAccess(ALL_DOCUMENT_RIGHTS,           getXUser("userA"), getDoc("docAllowA",    "any space",   "wikiNoRules"));
 
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("any document", "any space",  "wikiAllowA"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("any document", "any space",  "wikiAllowA"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getDoc("any document", "spaceDenyA", "wikiAllowA"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("docAllowA",    "spaceDenyA", "wikiAllowA"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("docAllowA",    "spaceDenyA", "wikiAllowA"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getDoc("docDenyA",     "any space",  "wikiAllowA"));
     }
 
@@ -504,10 +504,10 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
         assertAccess(new RightSet(LOGIN, REGISTER), getUser("userA", "wikiUserDenyAllowNoAdmin"), getWiki("wikiUserDenyAllowNoAdmin"));
         assertAccess(new RightSet(LOGIN, REGISTER), getUser("userA", "wikiGroupAllowDenyNoAdmin"), getWiki("wikiGroupAllowDenyNoAdmin"));
         assertAccess(new RightSet(LOGIN, REGISTER), getUser("userA", "wikiGroupDenyAllowNoAdmin"), getWiki("wikiGroupDenyAllowNoAdmin"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getUser("userA", "wikiUserGroupAllowDenyNoAdmin"), getWiki("wikiUserGroupAllowDenyNoAdmin"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getUser("userA", "wikiUserGroupAllowDenyNoAdmin"), getWiki("wikiUserGroupAllowDenyNoAdmin"));
         assertAccess(null,                          getUser("userA", "wikiUserGroupDenyAllowNoAdmin"), getWiki("wikiUserGroupDenyAllowNoAdmin"));
         assertAccess(null,                          getUser("userA", "wikiGroupUserAllowDenyNoAdmin"), getWiki("wikiGroupUserAllowDenyNoAdmin"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getUser("userA", "wikiGroupUserDenyAllowNoAdmin"), getWiki("wikiGroupUserDenyAllowNoAdmin"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getUser("userA", "wikiGroupUserDenyAllowNoAdmin"), getWiki("wikiGroupUserDenyAllowNoAdmin"));
     }
 
     @Test
@@ -543,25 +543,25 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
         initialiseWikiMock("groupAccess");
 
         assertAccess(DEFAULT_DOCUMENT_RIGHTS,       getXUser("userA"), getXDoc("any document", "any space"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getXDoc("docAllowGroupA", "any space"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getXDoc("docAllowGroupeB", "any space"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getXDoc("docAllowGroupA", "any space"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getXDoc("docAllowGroupeB", "any space"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getXDoc("docDenyGroupA", "any space"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getXDoc("docDenyGroupB", "any space"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getXDoc("docDenyGroupAAllowUserA", "any space"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getXDoc("docDenyGroupBAllowUserA", "any space"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getXDoc("docDenyGroupAAllowUserA", "any space"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getXDoc("docDenyGroupBAllowUserA", "any space"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getXDoc("docDenyGroupBAllowGroupA", "any space"));
         assertAccess(new RightSet(LOGIN, REGISTER), getXUser("userA"), getXDoc("docDenyGroupAAllowGroupB", "any space"));
 
         assertAccess(DEFAULT_DOCUMENT_RIGHTS,       getUser("userB","subwiki"), getDoc("any document", "any space", "subwiki"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getUser("userB","subwiki"), getDoc("docAllowGroupA", "any space", "subwiki"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getUser("userB","subwiki"), getDoc("docAllowGroupB", "any space", "subwiki"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getUser("userB","subwiki"), getDoc("docAllowGroupA", "any space", "subwiki"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getUser("userB","subwiki"), getDoc("docAllowGroupB", "any space", "subwiki"));
         assertAccess(new RightSet(LOGIN, REGISTER), getUser("userB","subwiki"), getDoc("docAllowGroupC", "any space", "subwiki"));
 
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("docAllowGlobalGroupA", "any space", "subwiki"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("docAllowGlobalGroupB", "any space", "subwiki"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("docAllowGroupA", "any space", "subwiki"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("docAllowGroupB", "any space", "subwiki"));
-        assertAccess(ALL_RIGHTS_EXCEPT_ADMIN,       getXUser("userA"), getDoc("docAllowGroupC", "any space", "subwiki"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("docAllowGlobalGroupA", "any space", "subwiki"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("docAllowGlobalGroupB", "any space", "subwiki"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("docAllowGroupA", "any space", "subwiki"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("docAllowGroupB", "any space", "subwiki"));
+        assertAccess(ALL_RIGHTS_EXCEPT_SCRIPT,       getXUser("userA"), getDoc("docAllowGroupC", "any space", "subwiki"));
     }
 
     @Test

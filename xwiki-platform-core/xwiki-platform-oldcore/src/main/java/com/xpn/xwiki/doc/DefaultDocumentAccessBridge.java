@@ -667,6 +667,12 @@ public class DefaultDocumentAccessBridge implements DocumentAccessBridge
     {
         return hasRight(documentReference, "edit");
     }
+    
+    @Override
+    public boolean isDocumentScriptable(DocumentReference documentReference)
+    {
+    	return hasRight(documentReference, "scripting");
+    }
 
     @Override
     public boolean hasProgrammingRights()
