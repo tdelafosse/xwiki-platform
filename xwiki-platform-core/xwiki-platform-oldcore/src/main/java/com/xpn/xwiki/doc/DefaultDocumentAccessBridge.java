@@ -669,12 +669,6 @@ public class DefaultDocumentAccessBridge implements DocumentAccessBridge
     }
     
     @Override
-    public boolean isDocumentScriptable(DocumentReference documentReference)
-    {
-    	return hasRight(documentReference, "scripting");
-    }
-
-    @Override
     public boolean hasProgrammingRights()
     {
         XWikiContext xcontext = getContext();

@@ -194,9 +194,7 @@ public class HTMLMacro extends AbstractMacro<HTMLMacroParameters>
                 throw new MacroExecutionException("The HTML macro may not be used with clean=\"false\" in this context.");
             }
             
-            boolean canScript = documentAccessBridge.isDocumentScriptable(documentAccessBridge.getCurrentDocumentReference());
-            
-            if(!canScript && !isValid(normalizedContent)) {
+            if(!documentAccessBridge.hasProgrammingRights() && !isValid(normalizedContent)) {
             	logger.debug("Invalid content for the HTML macro : " + normalizedContent);
             	throw new MacroExecutionException("The content is invalid.");
             }

@@ -89,10 +89,8 @@ public class HTMLMacroTest extends AbstractComponentTestCase
         MacroTransformationContext context = new MacroTransformationContext();
         context.getTransformationContext().setRestricted(true);
     	getMockery().checking(new Expectations() {{
-    		allowing(dab).getCurrentDocumentReference();
-    		will(returnValue(null));
-            allowing(dab).isDocumentScriptable(null);
-            will(returnValue(false));
+    		allowing(dab).hasProgrammingRights();
+    		will(returnValue(false));
             allowing(configuration).getProperty(TAG_PROPERTY, defaultTags);
             will(returnValue(defaultTags));
        }});
@@ -113,10 +111,8 @@ public class HTMLMacroTest extends AbstractComponentTestCase
         HTMLMacroParameters parameters = new HTMLMacroParameters();
         MacroTransformationContext context = new MacroTransformationContext();
     	getMockery().checking(new Expectations() {{
-    		allowing(dab).getCurrentDocumentReference();
-    		will(returnValue(null));
-            allowing(dab).isDocumentScriptable(null);
-            will(returnValue(false));
+    		allowing(dab).hasProgrammingRights();
+    		will(returnValue(false));
             allowing(configuration).getProperty(TAG_PROPERTY, defaultTags);
             will(returnValue(defaultTags));
         }});
@@ -130,10 +126,8 @@ public class HTMLMacroTest extends AbstractComponentTestCase
         HTMLMacroParameters parameters = new HTMLMacroParameters();
         MacroTransformationContext context = new MacroTransformationContext();
     	getMockery().checking(new Expectations() {{
-    		allowing(dab).getCurrentDocumentReference();
-    		will(returnValue(null));
-            allowing(dab).isDocumentScriptable(null);
-            will(returnValue(false));
+    		allowing(dab).hasProgrammingRights();
+    		will(returnValue(false));
             allowing(configuration).getProperty(TAG_PROPERTY, defaultTags);
             will(returnValue(defaultTags));
         }});
@@ -152,10 +146,8 @@ public class HTMLMacroTest extends AbstractComponentTestCase
         MacroTransformationContext context = new MacroTransformationContext();
         final String[] additionalTag = {"abbr"}; 
     	getMockery().checking(new Expectations() {{
-    		allowing(dab).getCurrentDocumentReference();
-    		will(returnValue(null));
-            allowing(dab).isDocumentScriptable(null);
-            will(returnValue(false));
+    		allowing(dab).hasProgrammingRights();
+    		will(returnValue(false));
             allowing(configuration).getProperty(TAG_PROPERTY, defaultTags);
             will(returnValue(additionalTag));
        }});
