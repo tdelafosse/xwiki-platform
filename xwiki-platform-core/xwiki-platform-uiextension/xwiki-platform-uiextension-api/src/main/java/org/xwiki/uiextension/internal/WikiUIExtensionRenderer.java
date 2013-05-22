@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.wiki.WikiComponentException;
@@ -67,6 +68,11 @@ public class WikiUIExtensionRenderer
      * Used to retrieve the XWiki context.
      */
     private final Execution execution;
+    
+    /**
+     * Used to check view rights on document.
+     */
+    private final DocumentAccessBridge documentAccessBridge;
 
     /**
      * The xdom from the parsed content, we keep it in order to parse it only once.
@@ -95,6 +101,7 @@ public class WikiUIExtensionRenderer
         try {
             this.execution = cm.getInstance(Execution.class);
             this.macroTransformation = cm.<Transformation>getInstance(Transformation.class, "macro");
+            this.documentAccessBridge = cm.getInstance(DocumentAccessBridge.class);
             ContentParser contentParser = cm.getInstance(ContentParser.class);
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
             this.xdom = contentParser.parse(content, xdoc.getSyntax());
@@ -113,6 +120,10 @@ public class WikiUIExtensionRenderer
      */
     public CompositeBlock execute()
     {
+        // We only execute if the current user has the right to see the page containing the UI.
+        if (!documentAccessBridge.isDocumentViewable(documentReference)) {
+            return null;
+        }
         // We need to clone the xdom to avoid transforming the original and make it useless after the first
         // transformation
         XDOM transformedXDOM = xdom.clone();
@@ -121,6 +132,7 @@ public class WikiUIExtensionRenderer
         try {
             // Get the document holding the UIX and put it in the UIX context
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
+            LOGGER.warn("DocumentReference is : " + documentReference.getName());
             Map<String, Object> uixContext = new HashMap<String, Object>();
             uixContext.put(WikiUIExtension.CONTEXT_UIX_DOC_KEY, xdoc.newDocument(getXWikiContext()));
 

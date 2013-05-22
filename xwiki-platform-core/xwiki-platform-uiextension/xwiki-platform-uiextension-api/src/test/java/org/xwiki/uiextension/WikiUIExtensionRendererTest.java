@@ -22,6 +22,7 @@ package org.xwiki.uiextension;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.wiki.internal.bridge.ContentParser;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
@@ -46,6 +47,8 @@ import static org.mockito.Mockito.when;
 public class WikiUIExtensionRendererTest
 {
     private Execution execution;
+    
+    private DocumentAccessBridge documentAccessBridge;
 
     private Transformation macroTransformation;
 
@@ -63,6 +66,7 @@ public class WikiUIExtensionRendererTest
     {
         execution = cm.registerMockComponent(Execution.class);
         ExecutionContext executionContext = mock(ExecutionContext.class);
+        documentAccessBridge = cm.registerMockComponent(DocumentAccessBridge.class);
         macroTransformation = cm.registerMockComponent(Transformation.class, "macro");
         contentParser = cm.registerMockComponent(ContentParser.class);
         when(execution.getContext()).thenReturn(executionContext);
@@ -82,6 +86,7 @@ public class WikiUIExtensionRendererTest
         when(xcontext.getWiki()).thenReturn(xwiki);
         when(xwiki.getDocument(DOC_REF, xcontext)).thenReturn(xdoc);
         when(xcontext.getWiki().getDocument(DOC_REF, xcontext)).thenReturn(xdoc);
+        when(documentAccessBridge.isDocumentViewable(DOC_REF)).thenReturn(true);
         when(xdoc.getSyntax()).thenReturn(Syntax.XWIKI_2_1);
 
         WikiUIExtensionRenderer renderer = new WikiUIExtensionRenderer("roleHint", "", DOC_REF, cm);

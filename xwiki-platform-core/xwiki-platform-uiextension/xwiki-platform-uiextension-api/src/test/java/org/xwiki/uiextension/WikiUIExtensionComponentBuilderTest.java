@@ -30,6 +30,7 @@ import org.jmock.Expectations;
 import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.Before;
 import org.junit.Test;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.wiki.WikiComponent;
 import org.xwiki.component.wiki.WikiComponentBuilder;
@@ -117,6 +118,8 @@ public class WikiUIExtensionComponentBuilderTest extends AbstractMockingComponen
     private WikiUIExtensionComponentBuilder builder;
 
     private Execution execution;
+    
+    private DocumentAccessBridge documentAccessBridge;
 
     @Before
     public void configure() throws Exception
@@ -127,6 +130,8 @@ public class WikiUIExtensionComponentBuilderTest extends AbstractMockingComponen
 
         execution = getComponentManager().getInstance(Execution.class);
         final ExecutionContext context = new ExecutionContext();
+        
+        documentAccessBridge = getMockery().mock(DocumentAccessBridge.class);
 
         this.xwiki = getMockery().mock(XWiki.class);
 
@@ -143,7 +148,10 @@ public class WikiUIExtensionComponentBuilderTest extends AbstractMockingComponen
             {
                 allowing(execution).getContext();
                 will(returnValue(context));
-
+                
+                allowing(documentAccessBridge).isDocumentViewable(DOC_REF);
+                will(returnValue(true));
+                
                 allowing(xwiki).getDocument(DOC_REF, xwikiContext);
                 will(returnValue(componentDoc));
                 allowing(componentDoc).getSyntax();
@@ -311,6 +319,8 @@ public class WikiUIExtensionComponentBuilderTest extends AbstractMockingComponen
                 will(returnValue(xdom));
                 oneOf(componentManager).getInstance(Transformation.class, "macro");
                 will(returnValue(transformation));
+                oneOf(componentManager).getInstance(DocumentAccessBridge.class);
+                will(returnValue(documentAccessBridge));
                 oneOf(componentManager).getInstance(Execution.class);
                 will(returnValue(execution));
                 oneOf(componentManager).getInstance(ModelContext.class);

@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.wiki.WikiComponent;
@@ -90,6 +91,11 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
      * Used to transform the macros within the extension content.
      */
     private final Transformation macroTransformation;
+    
+    /**
+     * Used to check the current user right to see the content of the panel.
+     */
+    private final DocumentAccessBridge documentAccessBridge;
 
     /**
      * Default constructor.
@@ -109,6 +115,7 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
         this.xdom = xdom;
         this.syntax = syntax;
         this.macroTransformation = componentManager.getInstance(Transformation.class, "macro");
+        this.documentAccessBridge = componentManager.getInstance(DocumentAccessBridge.class);
         this.serializer = componentManager.getInstance(EntityReferenceSerializer.TYPE_STRING);
     }
 
@@ -139,10 +146,16 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
     @Override
     public Block execute()
     {
+        // We only execute the block if the current user has view rights on the document defining the panel.
+        if (!documentAccessBridge.isDocumentViewable(documentReference)) {
+            LOGGER.warn("You don't have the right to view this panel");
+            return null;
+        }
+        
         // We need to clone the xdom to avoid transforming the original and make it useless after the first
         // transformation
         XDOM transformedXDOM = xdom.clone();
-
+        
         // Perform macro transformations.
         try {
             TransformationContext transformationContext = new TransformationContext(xdom, syntax);
