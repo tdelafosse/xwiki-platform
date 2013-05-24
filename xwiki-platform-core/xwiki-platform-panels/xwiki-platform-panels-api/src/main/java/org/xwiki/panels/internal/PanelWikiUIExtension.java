@@ -29,6 +29,7 @@ import org.xwiki.component.manager.ComponentLookupException;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.component.wiki.WikiComponent;
 import org.xwiki.component.wiki.WikiComponentScope;
+import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.block.Block;
@@ -39,6 +40,12 @@ import org.xwiki.rendering.transformation.Transformation;
 import org.xwiki.rendering.transformation.TransformationContext;
 import org.xwiki.rendering.transformation.TransformationException;
 import org.xwiki.uiextension.UIExtension;
+
+import com.xpn.xwiki.XWikiConstant;
+import com.xpn.xwiki.XWikiContext;
+import com.xpn.xwiki.XWikiException;
+import com.xpn.xwiki.doc.XWikiDocument;
+import com.xpn.xwiki.web.Utils;
 
 /**
  * Provides a bridge between Panels defined in XObjects and {@link UIExtension}.
@@ -52,6 +59,11 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
      * The logger to log.
      */
     private static final Logger LOGGER = LoggerFactory.getLogger(PanelWikiUIExtension.class);
+    
+    /**
+     * Used to access the context.
+     */
+    private final Execution execution = Utils.getComponent(Execution.class);
 
     /**
      * Serializer used to transform the panel document reference into the panel ID, for example 'Panels.Quicklinks'.
@@ -143,13 +155,32 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
         // transformation
         XDOM transformedXDOM = xdom.clone();
 
+        XWikiContext xcontext = (XWikiContext) execution.getContext().getProperty("xwikicontext");
         // Perform macro transformations.
         try {
             TransformationContext transformationContext = new TransformationContext(xdom, syntax);
             transformationContext.setId(this.getRoleHint());
-            macroTransformation.transform(transformedXDOM, transformationContext);
+            XWikiDocument doc = xcontext.getWiki().getDocument(documentReference, xcontext);
+            // Here, we also have to make sure that the last author of the document objects has PR,
+            // as the content of the panel is stored in the document metadata.
+            boolean hasAuthorPR = 
+                    xcontext.getWiki().getRightService().hasAccessLevel("programming",
+                          authorReference.toString(), documentReference.toString(), xcontext);
+            if (!xcontext.hasDroppedPermissions() 
+                    && (!xcontext.getWiki().getRightService().hasProgrammingRights(doc, xcontext) || !hasAuthorPR)) {
+            	// In this case, we drop permissions for the transformation only.
+                xcontext.dropPermissions();
+                macroTransformation.transform(transformedXDOM, transformationContext);
+                xcontext.put(XWikiConstant.DROPPED_PERMISSIONS, Boolean.FALSE);
+            } else {
+                macroTransformation.transform(transformedXDOM, transformationContext);
+            }
+            
         } catch (TransformationException e) {
             LOGGER.error("Error while executing wiki component macro transformation for extension [{}]",
+                documentReference.toString());
+        } catch (XWikiException e) {
+            LOGGER.error("Error while trying to evaluate Programming rights for extension [{}]", 
                 documentReference.toString());
         }
 
