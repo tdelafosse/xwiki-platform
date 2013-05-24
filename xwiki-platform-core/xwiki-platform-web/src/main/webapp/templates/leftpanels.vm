@@ -4,8 +4,10 @@
 #foreach($panelUix in $panelUixs)
   ## We need to set this because the panelheader macro used in panels needs it
   #set($paneldoc = $xwiki.getDocument($panelUix.getId()))
-  #if($paneldoc && $!xwiki.hasAccessLevel('view', $paneldoc))
-  $services.rendering.render($panelUix.execute(), "xhtml/1.0")
+  #set($content = $panelUix.execute())
+  ##If the content is null, it means the current user has not the right to view the panel.
+  #if($content)
+    $services.rendering.render($content, "xhtml/1.0")
   #end
 #end
 </div>

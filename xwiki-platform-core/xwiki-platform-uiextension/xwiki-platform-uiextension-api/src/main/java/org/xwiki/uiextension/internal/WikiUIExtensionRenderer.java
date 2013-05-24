@@ -116,12 +116,13 @@ public class WikiUIExtensionRenderer
     }
 
     /**
-     * @return the rendered content of the extension
+     * @return the rendered content of the extension or null if authorization denied
      */
     public CompositeBlock execute()
     {
         // We only execute if the current user has the right to see the page containing the UI.
         if (!documentAccessBridge.isDocumentViewable(documentReference)) {
+            LOGGER.warn("You don't have the right to view this extension");
             return null;
         }
         // We need to clone the xdom to avoid transforming the original and make it useless after the first
@@ -132,7 +133,6 @@ public class WikiUIExtensionRenderer
         try {
             // Get the document holding the UIX and put it in the UIX context
             XWikiDocument xdoc = getXWikiContext().getWiki().getDocument(documentReference, getXWikiContext());
-            LOGGER.warn("DocumentReference is : " + documentReference.getName());
             Map<String, Object> uixContext = new HashMap<String, Object>();
             uixContext.put(WikiUIExtension.CONTEXT_UIX_DOC_KEY, xdoc.newDocument(getXWikiContext()));
 
