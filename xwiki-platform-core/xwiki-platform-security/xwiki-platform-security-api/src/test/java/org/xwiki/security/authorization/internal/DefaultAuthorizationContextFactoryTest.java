@@ -46,6 +46,7 @@ import org.xwiki.component.manager.ComponentManager;
 import javax.inject.Provider;
 
 import org.jmock.Expectations;
+import org.jmock.States;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +73,11 @@ public class DefaultAuthorizationContextFactoryTest extends AbstractMockingCompo
     private EffectiveUserUpdater effectiveUserUpdater;
 
     private Execution execution;
-
+    
+    /**
+     * Introduce a state to be able to override setup expectations.
+     */
+    private States state = getMockery().states("normal");
 
     @Before
     @Override
@@ -104,7 +109,7 @@ public class DefaultAuthorizationContextFactoryTest extends AbstractMockingCompo
         final ExecutionContext executionContext = new ExecutionContext();
         getMockery().checking(new Expectations() {{
             allowing(execution).setContext(executionContext);
-            allowing(execution).getContext();   will(returnValue(executionContext));
+            allowing(execution).getContext();   will(returnValue(executionContext));    when(state.isNot("newContext"));
             allowing(contentAuthorResolver).resolveContentAuthor(null); will(returnValue(null));
             allowing(effectiveUserUpdater).updateUser(with(any(DocumentReference.class)));
             allowing(effectiveUserUpdater).updateUser(null);
@@ -315,6 +320,7 @@ public class DefaultAuthorizationContextFactoryTest extends AbstractMockingCompo
         Assert.assertTrue(authorizationContext.isPrivileged());
     }
 
+    @Test
     public void privilegedModeControlCurrentContext() throws Exception
     {
         final AuthorizationContext authorizationContext = getAuthorizationContext();
@@ -323,6 +329,13 @@ public class DefaultAuthorizationContextFactoryTest extends AbstractMockingCompo
             .getInstance(PrivilegedModeController.PROVIDER_TYPE);
 
         final PrivilegedModeController pmc = provider.get();
+        
+        final ExecutionContext executionContext2 = new ExecutionContext();
+        getMockery().checking(new Expectations() {{
+            allowing(execution).pushContext(executionContext2);
+            allowing(execution).getContext();    will(returnValue(executionContext2));
+            allowing(execution).popContext();
+        }});
 
         Assert.assertTrue(authorizationContext.isPrivileged());
 
@@ -330,10 +343,14 @@ public class DefaultAuthorizationContextFactoryTest extends AbstractMockingCompo
 
         Assert.assertFalse(authorizationContext.isPrivileged());
 
-        execution.pushContext(new ExecutionContext());
+        execution.pushContext(executionContext2);
+        // Let's change the state, so that the new context would be called.
+        state.become("newContext");
 
+        System.out.println("Has prop ? : " + execution.getContext().hasProperty("privileged_mode_disabled"));
         Assert.assertTrue(authorizationContext.isPrivileged());
 
+        state.become("normal");
         execution.popContext();
 
         Assert.assertFalse(authorizationContext.isPrivileged());

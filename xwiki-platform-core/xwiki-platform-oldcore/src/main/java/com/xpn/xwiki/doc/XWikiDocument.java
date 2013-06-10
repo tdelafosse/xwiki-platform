@@ -1009,46 +1009,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
     public String getRenderedContent(String text, String sourceSyntaxId, String targetSyntaxId,
         boolean restrictedTransformationContext, XWikiContext context)
     {
-        String result = getRenderingCache().getRenderedContent(getDocumentReference(), text, context);
-
-        if (result == null) {
-            Map<String, Object> backup = null;
-            try {
-                // We have to render the given text in the context of this document. Check if this document is already
-                // on the context (same Java object reference). We don't check if the document references are equal
-                // because this document can have temporary changes that are not present on the context document even if
-                // it has the same document reference.
-                if (context.getDoc() != this) {
-                    backup = new HashMap<String, Object>();
-                    backupContext(backup, context);
-                    setAsContextDoc(context);
-                }
-
-                // Reuse this document's reference so that the Velocity macro name-space is computed based on it.
-                XWikiDocument fakeDocument = new XWikiDocument(getDocumentReference());
-                fakeDocument.setSyntax(this.syntaxFactory.createSyntaxFromIdString(sourceSyntaxId));
-                fakeDocument.setContent(text);
-
-                DocumentDisplayerParameters parameters = new DocumentDisplayerParameters();
-                parameters.setTransformationContextIsolated(true);
-                parameters.setTransformationContextRestricted(restrictedTransformationContext);
-                XDOM contentXDOM = getDocumentDisplayer().display(fakeDocument, parameters);
-                result = renderXDOM(contentXDOM, this.syntaxFactory.createSyntaxFromIdString(targetSyntaxId));
-
-                getRenderingCache().setRenderedContent(getDocumentReference(), text, result, context);
-            } catch (Exception e) {
-                // Failed to render for some reason. This method should normally throw an exception but this
-                // requires changing the signature of calling methods too.
-                LOGGER.warn("Failed to render content [" + text + "]", e);
-                result = "";
-            } finally {
-                if (backup != null) {
-                    restoreContext(backup, context);
-                }
-            }
-        }
-
-        return result;
+        return this.getRenderedContent(text, sourceSyntaxId, targetSyntaxId, restrictedTransformationContext, context, authorReference);
     }
     
     /**
@@ -1058,7 +1019,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
      * @param restrictedTransformationContext see {@link DocumentDisplayerParameters#isTransformationContextRestricted}.
      * @param author the author of the text to be rendered
      * @return the given text rendered in the context of this document using the passed Syntax
-     * @since 4.2M1
+     * @since 5.2M1
      */
     public String getRenderedContent(String text, String sourceSyntaxId, String targetSyntaxId,
         boolean restrictedTransformationContext, XWikiContext context, DocumentReference author)
@@ -1084,11 +1045,10 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
                 fakeDocument.setContent(text);
                 // Let's specify the author to make sure rights are given according to him
                 fakeDocument.setContentAuthorReference(author);
-                // Let's set isMetaDataDirty, isContentDirty and isNew to false to enable rights evaluation
-                fakeDocument.setMetaDataDirty(false);
-                fakeDocument.setContentDirty(false);
-                fakeDocument.setNew(false);
-
+                // Let's set isMetaDataDirty, isContentDirty and isNew to enable rights evaluation
+                fakeDocument.setMetaDataDirty(isMetaDataDirty);
+                fakeDocument.setContentDirty(isContentDirty);
+                fakeDocument.setNew(isNew);
                 DocumentDisplayerParameters parameters = new DocumentDisplayerParameters();
                 parameters.setTransformationContextIsolated(true);
                 parameters.setTransformationContextRestricted(restrictedTransformationContext);
