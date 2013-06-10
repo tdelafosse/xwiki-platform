@@ -36,7 +36,6 @@
   <properties>
     <gwt.version>2.5.1</gwt.version>
     <gwt.maven.plugin.version>2.5.1</gwt.maven.plugin.version>
-    <smartgwt.version>3.1</smartgwt.version>
     <!-- JS/CSS minification is on by default, this property is used in order to able to skip minification when the
          debug profile is active. It can also be used from the command line to skip minification -->
     <xwiki.minification.skip>false</xwiki.minification.skip>
@@ -62,7 +61,7 @@
       <dependency>
         <groupId>org.jgroups</groupId>
         <artifactId>jgroups</artifactId>
-        <version>3.2.7.Final</version>
+        <version>3.3.0.Final</version>
       </dependency>
       <!-- Apache Tika used by Lucene and Office modules -->
       <dependency>
@@ -378,6 +377,13 @@
               <differenceType>7002</differenceType>
               <justification>The authorization settler (right service) no longer depends on this method for deciding if programming rights should be granted or not.</justification>
             </difference>
+            <difference>
+              <className>org/xwiki/url/InvalidURLException</className>
+              <differenceType>8001</differenceType>
+              <justification>
+                Young API: The URL module has never been finished and we started working on it again
+              </justification>
+            </difference>
           </ignored>
           <excludes>
             <exclude>**/internal/**</exclude>
@@ -428,6 +434,7 @@
     <module>xwiki-platform-git</module>
     <module>xwiki-platform-groovy</module>
     <module>xwiki-platform-gwt</module>
+    <module>xwiki-platform-help</module>
     <module>xwiki-platform-index</module>
     <module>xwiki-platform-invitation</module>
     <module>xwiki-platform-ircbot</module>

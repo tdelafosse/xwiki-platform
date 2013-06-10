@@ -118,7 +118,7 @@ public class XWikiCachingRightService implements XWikiRightService
             .putAction("objectsync", Right.EDIT)
             .putAction("rollback", Right.EDIT)
             .putAction("upload", Right.EDIT)
-            .putAction("create", Right.EDIT)
+            .putAction("create", Right.VIEW)
             .putAction("deleteversions", Right.ADMIN)
             .putAction("deletespace", Right.ADMIN)
             .putAction("temp", Right.VIEW);
@@ -127,7 +127,7 @@ public class XWikiCachingRightService implements XWikiRightService
     /** Resolver for document references. */
     @SuppressWarnings("unchecked")
     private DocumentReferenceResolver<String> documentReferenceResolver
-        = Utils.getComponent(DocumentReferenceResolver.TYPE_STRING);
+        = Utils.getComponent(DocumentReferenceResolver.TYPE_STRING, "currentmixed");
 
     /** Resolver for user and group document references. */
     @SuppressWarnings("unchecked")

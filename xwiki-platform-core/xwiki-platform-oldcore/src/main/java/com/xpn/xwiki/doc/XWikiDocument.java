@@ -19,6 +19,7 @@
  */
 package com.xpn.xwiki.doc;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,7 +53,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -4023,7 +4024,25 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
         el.addText(String.valueOf(isHidden()));
         wr.write(el);
 
-        for (XWikiAttachment attach : getAttachmentList()) {
+        List<XWikiAttachment> sortedAttachments = new ArrayList<XWikiAttachment>(getAttachmentList());
+        Collections.sort(sortedAttachments, new Comparator<XWikiAttachment>()
+        {
+            @Override
+            public int compare(XWikiAttachment o1, XWikiAttachment o2)
+            {
+                if (o1 == null || o2 == null) {
+                    int result = 0;
+                    if (o1 != null) {
+                        result = -1;
+                    } else if (o2 != null) {
+                        result = 1;
+                    }
+                    return result;
+                }
+                return o1.getFilename().compareTo(o2.getFilename());
+            }
+        });
+        for (XWikiAttachment attach : sortedAttachments) {
             attach.toXML(wr, bWithAttachmentContent, bWithVersions, context);
         }
 
@@ -4983,16 +5002,21 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
         return null;
     }
 
-    public XWikiAttachment addAttachment(String fileName, InputStream iStream, XWikiContext context)
-        throws XWikiException, IOException
+    /**
+     * @deprecated use {@link #addAttachment(String, InputStream, XWikiContext)} instead
+     */
+    public XWikiAttachment addAttachment(String fileName, byte[] content, XWikiContext context) throws XWikiException
     {
-        ByteArrayOutputStream bAOut = new ByteArrayOutputStream();
-        IOUtils.copy(iStream, bAOut);
-
-        return addAttachment(fileName, bAOut.toByteArray(), context);
+        try {
+            return addAttachment(fileName, new ByteArrayInputStream(content != null ? content : new byte[0]), context);
+        } catch (IOException e) {
+            throw new XWikiException(XWikiException.MODULE_XWIKI_DOC, XWikiException.ERROR_XWIKI_UNKNOWN,
+                "Failed to set Attachment content", e);
+        }
     }
 
-    public XWikiAttachment addAttachment(String fileName, byte[] data, XWikiContext context) throws XWikiException
+    public XWikiAttachment addAttachment(String fileName, InputStream content, XWikiContext context)
+        throws XWikiException, IOException
     {
         int i = fileName.indexOf('\\');
         if (i == -1) {
@@ -5009,7 +5033,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
             getAttachmentList().add(attachment);
         }
 
-        attachment.setContent(data);
+        attachment.setContent(content);
         attachment.setFilename(filename);
         attachment.setAuthor(context.getUser());
         // Add the attachment to the document
@@ -5565,9 +5589,32 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
         return locale;
     }
 
+    /**
+     * @deprecated since 5.1M2 use {@link #getTranslationLocales(XWikiContext)} instead
+     */
+    @Deprecated
     public List<String> getTranslationList(XWikiContext context) throws XWikiException
     {
         return getStore().getTranslationList(this, context);
+    }
+
+    /**
+     * The locales of the translation of this document (the default locale is not included).
+     * 
+     * @param context the XWiki context
+     * @return the locales of the translations
+     * @throws XWikiException if retriving the translations from the database failed
+     */
+    public List<Locale> getTranslationLocales(XWikiContext context) throws XWikiException
+    {
+        List<String> translations = getTranslationList(context);
+
+        List<Locale> locales = new ArrayList<Locale>(translations.size());
+        for (String translationString : translations) {
+            locales.add(LocaleUtils.toLocale(translationString));
+        }
+
+        return locales;
     }
 
     public List<Delta> getXMLDiff(XWikiDocument fromDoc, XWikiDocument toDoc, XWikiContext context)
@@ -5955,6 +6002,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
                 String saveMessage =
                     context.getMessageTool().get("core.comment.renameParent",
                         Arrays.asList(this.compactEntityReferenceSerializer.serialize(newDocumentReference)));
+                childDocument.setAuthorReference(context.getUserReference());
                 xwiki.saveDocument(childDocument, saveMessage, true, context);
             }
         }
@@ -5994,6 +6042,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
             String saveMessage =
                 context.getMessageTool().get("core.comment.renameLink",
                     Arrays.asList(this.compactEntityReferenceSerializer.serialize(newDocumentReference)));
+            backlinkDocument.setAuthorReference(context.getUserReference());
             xwiki.saveDocument(backlinkDocument, saveMessage, true, context);
         }
 
@@ -6029,6 +6078,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
             // Set new content and save document if needed
             if (modified) {
                 newDocument.setContent(newDocumentXDOM);
+                newDocument.setAuthorReference(context.getUserReference());
                 xwiki.saveDocument(newDocument, context);
             }
         }
@@ -7049,7 +7099,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
 
         XWikiContext context = null;
         if (ec != null) {
-            context = (XWikiContext) ec.getProperty("xwikicontext");
+            context = (XWikiContext) ec.getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
         }
 
         return context;
@@ -7609,6 +7659,9 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
             throw new RuntimeException("Failed to clone the Execution Context", e);
         }
 
+        // Bridge with old XWiki Context, required for legacy code.
+        execution.getContext().setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, context);
+
         // Trigger the initialization of the new Velocity and Script Context. This will also ensure that the Execution
         // Context and the XWiki Context point to the same Velocity Context instance. There is old code that accesses
         // the Velocity Context from the XWiki Context.
@@ -8094,22 +8147,28 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
         setContent(MergeUtils.mergeLines(previousDocument.getContent(), newDocument.getContent(), getContent(),
             mergeResult));
 
+        // Syntax
+        setSyntax(MergeUtils
+            .mergeOject(previousDocument.getSyntax(), newDocument.getSyntax(), getSyntax(), mergeResult));
+
         // Parent
-        if (ObjectUtils.notEqual(previousDocument.getAuthorReference(), newDocument.getAuthorReference())) {
-            if (ObjectUtils.equals(previousDocument.getAuthorReference(), getAuthorReference())) {
-                setParentReference(newDocument.getRelativeParentReference());
+        setParentReference(MergeUtils.mergeOject(previousDocument.getRelativeParentReference(),
+            newDocument.getRelativeParentReference(), getRelativeParentReference(), mergeResult));
 
-                mergeResult.setModified(true);
-            }
-        }
+        // DefaultTemplate
+        setDefaultTemplate(MergeUtils.mergeOject(previousDocument.getDefaultTemplate(),
+            newDocument.getDefaultTemplate(), getDefaultTemplate(), mergeResult));
 
-        // Author
-        if (ObjectUtils.notEqual(previousDocument.getAuthorReference(), newDocument.getAuthorReference())
-            && ObjectUtils.equals(previousDocument.getAuthorReference(), getAuthorReference())) {
-            setAuthorReference(newDocument.getAuthorReference());
+        // Hidden
+        setHidden(MergeUtils.mergeOject(previousDocument.isHidden(), newDocument.isHidden(), isHidden(), mergeResult));
 
-            mergeResult.setModified(true);
-        }
+        // CustomClass
+        setCustomClass(MergeUtils.mergeLines(previousDocument.getCustomClass(), newDocument.getCustomClass(),
+            getCustomClass(), mergeResult));
+
+        // ValidationScript
+        setValidationScript(MergeUtils.mergeLines(previousDocument.getValidationScript(),
+            newDocument.getValidationScript(), getValidationScript(), mergeResult));
 
         // Objects
         List<List<ObjectDiff>> objectsDiff = previousDocument.getObjectDiff(previousDocument, newDocument, context);
@@ -8278,7 +8337,7 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
         // /////////////////////////////////
         // Document
 
-        if (!StringUtils.equals(getComment(), document.getContent())) {
+        if (!StringUtils.equals(getContent(), document.getContent())) {
             setContent(document.getContent());
             modified = true;
         }
@@ -8292,22 +8351,17 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
             modified = true;
         }
 
-        if (!StringUtils.equals(getFormat(), document.getFormat())) {
-            setFormat(document.getFormat());
-            modified = true;
-        }
-
-        if (!StringUtils.equals(getMeta(), document.getMeta())) {
-            setMeta(document.getMeta());
-            modified = true;
-        }
-
         if (!StringUtils.equals(getDefaultTemplate(), document.getDefaultTemplate())) {
             setDefaultTemplate(document.getDefaultTemplate());
             modified = true;
         }
         if (ObjectUtils.notEqual(getRelativeParentReference(), document.getRelativeParentReference())) {
             setParentReference(document.getRelativeParentReference());
+            modified = true;
+        }
+
+        if (!StringUtils.equals(getCustomClass(), document.getCustomClass())) {
+            setCustomClass(document.getCustomClass());
             modified = true;
         }
 
@@ -8321,8 +8375,8 @@ public class XWikiDocument implements DocumentModelBridge, Cloneable
             modified = true;
         }
 
-        if (!StringUtils.equals(getCustomClass(), document.getCustomClass())) {
-            setCustomClass(document.getCustomClass());
+        if (!StringUtils.equals(getValidationScript(), document.getValidationScript())) {
+            setValidationScript(document.getValidationScript());
             modified = true;
         }
 

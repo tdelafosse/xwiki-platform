@@ -20,21 +20,24 @@
 package org.xwiki.search.solr.internal.metadata;
 
 import java.util.List;
+import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
-import org.xwiki.bridge.DocumentAccessBridge;
+import org.xwiki.component.manager.ComponentLookupException;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.context.Execution;
-import org.xwiki.context.ExecutionContext;
+import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.search.solr.internal.api.Fields;
-import org.xwiki.search.solr.internal.api.SolrIndexException;
+import org.xwiki.search.solr.internal.api.SolrIndexerException;
+import org.xwiki.search.solr.internal.reference.SolrReferenceResolver;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -71,12 +74,6 @@ public abstract class AbstractSolrMetadataExtractor implements SolrMetadataExtra
     protected Execution execution;
 
     /**
-     * Reference to String serializer.
-     */
-    @Inject
-    protected EntityReferenceSerializer<String> serializer;
-
-    /**
      * Reference to String serializer. Used for fields such as class and fullname that are relative to their wiki and
      * are stored without the wiki name.
      */
@@ -85,34 +82,64 @@ public abstract class AbstractSolrMetadataExtractor implements SolrMetadataExtra
     protected EntityReferenceSerializer<String> localSerializer;
 
     /**
-     * DocumentAccessBridge component.
+     * Used to access current {@link XWikiContext}.
      */
     @Inject
-    protected DocumentAccessBridge documentAccessBridge;
+    protected Provider<XWikiContext> xcontextProvider;
+
+    /**
+     * Used to find the resolver.
+     */
+    @Inject
+    protected ComponentManager componentManager;
 
     @Override
-    public String getId(EntityReference reference) throws SolrIndexException
+    public LengthSolrInputDocument getSolrDocument(EntityReference entityReference) throws SolrIndexerException,
+        IllegalArgumentException
     {
-        String result = this.serializer.serialize(reference);
+        DocumentReference documentReference =
+            new DocumentReference(entityReference.extractReference(EntityType.DOCUMENT));
 
-        // TODO: Include language all the other entities once object/attachment translation is implemented.
+        try {
+            LengthSolrInputDocument solrDocument = new LengthSolrInputDocument();
 
-        return result;
+            solrDocument.setField(Fields.ID, getResolver(entityReference).getId(documentReference));
+
+            setDocumentFields(documentReference, solrDocument);
+
+            solrDocument.setField(Fields.TYPE, documentReference.getType().name());
+
+            setFieldsInternal(solrDocument, entityReference);
+
+            return solrDocument;
+        } catch (Exception e) {
+            String message = String.format("Failed to get input document for '%s'", documentReference);
+            throw new SolrIndexerException(message, e);
+        }
     }
 
     /**
-     * @return the XWikiContext
+     * @param solrDocument the {@link LengthSolrInputDocument} to modify
+     * @param entityReference the reference of the entity
+     * @throws Exception in case of errors
      */
-    protected XWikiContext getXWikiContext()
+    protected abstract void setFieldsInternal(LengthSolrInputDocument solrDocument, EntityReference entityReference)
+        throws Exception;
+
+    /**
+     * @param entityReference the reference of the entity
+     * @return the Solr resolver associated to the entity type
+     * @throws SolrIndexerException if any error
+     */
+    protected SolrReferenceResolver getResolver(EntityReference entityReference) throws SolrIndexerException
     {
-        ExecutionContext executionContext = this.execution.getContext();
-        XWikiContext context = (XWikiContext) executionContext.getProperty(XWikiContext.EXECUTIONCONTEXT_KEY);
-        // FIXME: Do we need this? Maybe when running an index Thread?
-        // if (context == null) {
-        // context = this.contextProvider.createStubContext();
-        // executionContext.setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, context);
-        // }
-        return context;
+        try {
+            return componentManager.getInstance(SolrReferenceResolver.class, entityReference.getType().toString()
+                .toLowerCase());
+        } catch (ComponentLookupException e) {
+            throw new SolrIndexerException("Faile to find solr reference redolver for type reference ["
+                + entityReference + "]");
+        }
     }
 
     /**
@@ -124,8 +151,9 @@ public abstract class AbstractSolrMetadataExtractor implements SolrMetadataExtra
      */
     protected XWikiDocument getDocument(DocumentReference documentReference) throws XWikiException
     {
-        XWikiContext context = getXWikiContext();
-        XWikiDocument document = context.getWiki().getDocument(documentReference, context);
+        XWikiContext xcontext = this.xcontextProvider.get();
+
+        XWikiDocument document = xcontext.getWiki().getDocument(documentReference, xcontext);
 
         return document;
     }
@@ -135,70 +163,67 @@ public abstract class AbstractSolrMetadataExtractor implements SolrMetadataExtra
      * 
      * @param documentReference reference to the document to be translated.
      * @return translated document.
-     * @throws SolrIndexException if problems occur.
+     * @throws SolrIndexerException if problems occur.
      */
-    protected XWikiDocument getTranslatedDocument(DocumentReference documentReference) throws SolrIndexException
+    protected XWikiDocument getTranslatedDocument(DocumentReference documentReference) throws SolrIndexerException
     {
         try {
             XWikiDocument document = getDocument(documentReference);
             XWikiDocument translatedDocument =
-                document.getTranslatedDocument(documentReference.getLocale(), getXWikiContext());
+                document.getTranslatedDocument(documentReference.getLocale(), this.xcontextProvider.get());
             return translatedDocument;
         } catch (Exception e) {
-            throw new SolrIndexException(String.format("Failed to get translated document for '%s'",
-                this.serializer.serialize(documentReference)), e);
+            throw new SolrIndexerException(String.format("Failed to get translated document for '%s'",
+                documentReference), e);
         }
     }
 
     /**
      * Adds to a Solr document the fields that are specific to the XWiki document that contains the entity to be
      * indexed. These fields required to identify the owning document and to also reflect some properties of the owning
-     * document towards the indexed entity (like language and hidden flag).
+     * document towards the indexed entity (like locale and hidden flag).
      * 
      * @param documentReference reference to document.
      * @param solrDocument the Solr document to which to add the fields.
      * @throws Exception if problems occur.
      */
-    protected void addDocumentFields(DocumentReference documentReference, SolrInputDocument solrDocument)
+    protected void setDocumentFields(DocumentReference documentReference, SolrInputDocument solrDocument)
         throws Exception
     {
-        solrDocument.addField(Fields.WIKI, documentReference.getWikiReference().getName());
-        solrDocument.addField(Fields.SPACE, documentReference.getLastSpaceReference().getName());
-        solrDocument.addField(Fields.NAME, documentReference.getName());
+        solrDocument.setField(Fields.WIKI, documentReference.getWikiReference().getName());
+        solrDocument.setField(Fields.SPACE, documentReference.getLastSpaceReference().getName());
+        solrDocument.setField(Fields.NAME, documentReference.getName());
 
-        String language = getLanguage(documentReference);
-        solrDocument.addField(Fields.LANGUAGE, language);
+        Locale locale = getLocale(documentReference);
+        solrDocument.setField(Fields.LOCALE, locale.toString());
+        solrDocument.setField(Fields.LANGUAGE, locale.getLanguage());
 
         XWikiDocument document = getDocument(documentReference);
-        solrDocument.addField(Fields.HIDDEN, document.isHidden());
+        solrDocument.setField(Fields.HIDDEN, document.isHidden());
     }
 
     /**
      * @param documentReference reference to the document.
-     * @return the language code of the referenced document.
-     * @throws SolrIndexException if problems occur.
+     * @return the locale code of the referenced document.
+     * @throws SolrIndexerException if problems occur.
      */
-    protected String getLanguage(DocumentReference documentReference) throws SolrIndexException
+    protected Locale getLocale(DocumentReference documentReference) throws SolrIndexerException
     {
-        String language = null;
+        Locale locale = null;
 
         try {
-            if (documentReference.getLocale() != null
-                && !StringUtils.isEmpty(documentReference.getLocale().getDisplayLanguage())) {
-                language = documentReference.getLocale().toString();
-            } else if (StringUtils.isNotEmpty(this.documentAccessBridge.getDocument(documentReference)
-                .getRealLanguage())) {
-                language = this.documentAccessBridge.getDocument(documentReference).getRealLanguage();
+            if (documentReference.getLocale() != null) {
+                locale = documentReference.getLocale();
             } else {
-                // Multilingual and Default placeholder
-                language = "en";
+                XWikiContext xcontext = this.xcontextProvider.get();
+                locale = xcontext.getWiki().getDocument(documentReference, xcontext).getRealLocale();
             }
         } catch (Exception e) {
-            throw new SolrIndexException(String.format("Exception while fetching the language of the document '%s'",
-                this.serializer.serialize(documentReference)), e);
+            throw new SolrIndexerException(String.format("Exception while fetching the locale of the document '%s'",
+                documentReference), e);
         }
 
-        return language;
+        return locale;
     }
 
     /**
@@ -207,21 +232,21 @@ public abstract class AbstractSolrMetadataExtractor implements SolrMetadataExtra
      * 
      * @param solrDocument the document where to add the properties.
      * @param object the object whose properties to add.
-     * @param language the language of the indexed document. In case of translations, this will obviously be different
-     *            than the original document's language.
+     * @param locale the locale of the indexed document. In case of translations, this will obviously be different
+     *            than the original document's locale.
      */
-    protected void addObjectContent(SolrInputDocument solrDocument, BaseObject object, String language)
+    protected void setObjectContent(SolrInputDocument solrDocument, BaseObject object, String locale)
     {
         if (object == null) {
             // Yes, the platform can return null objects.
             return;
         }
 
-        String fieldName = String.format(Fields.MULTILIGNUAL_FORMAT, Fields.OBJECT_CONTENT, language);
+        String fieldName = String.format(Fields.MULTILIGNUAL_FORMAT, Fields.OBJECT_CONTENT, locale);
 
-        XWikiContext context = getXWikiContext();
+        XWikiContext xcontext = this.xcontextProvider.get();
 
-        BaseClass xClass = object.getXClass(context);
+        BaseClass xClass = object.getXClass(xcontext);
 
         for (Object field : object.getFieldList()) {
             BaseProperty<EntityReference> property = (BaseProperty<EntityReference>) field;
@@ -235,7 +260,7 @@ public abstract class AbstractSolrMetadataExtractor implements SolrMetadataExtra
                     continue;
                 } else if (propertyValue instanceof List) {
                     // Handle list property values, by adding each list entry.
-                    List propertyListValues = (List) propertyValue;
+                    List< ? > propertyListValues = (List< ? >) propertyValue;
                     for (Object propertyListValue : propertyListValues) {
                         solrDocument.addField(fieldName,
                             String.format(OBJCONTENT_FORMAT, property.getName(), propertyListValue));

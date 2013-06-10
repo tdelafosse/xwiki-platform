@@ -74,7 +74,16 @@ $xwiki.jsfx.use('js/scriptaculous/effects.js', true)
 <script type="text/javascript" src="$xwiki.getSkinFile("js/xwiki/markerScript.js", false)" defer="defer"></script>
 <script type="text/javascript">
 // <![CDATA[
-require.config({paths:{jquery: "$xwiki.getSkinFile('resources/js/amd/jquery-1.9.1', true)"}, baseUrl: '/'});
+require.config({
+  paths: {
+    // Load from CDN if possible, otherwise load local file.
+    jquery: [
+      '//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min',
+      "$xwiki.getSkinFile('js/amd/')jquery"
+    ],
+    jQueryNoConflict: "$xwiki.getSkinFile('js/amd/')jQueryNoConflict"
+  }
+});
 XWiki.webapppath = "${xwiki.webAppPath}";
 XWiki.servletpath = "${xwiki.servletPath}";
 XWiki.contextPath = "${request.contextPath}";
