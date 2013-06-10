@@ -41,8 +41,6 @@ import org.xwiki.rendering.transformation.TransformationException;
 import org.xwiki.security.authorization.ContentAuthorController;
 import org.xwiki.uiextension.UIExtension;
 
-import com.xpn.xwiki.web.Utils;
-
 /**
  * Provides a bridge between Panels defined in XObjects and {@link UIExtension}.
  *
@@ -93,6 +91,11 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
      * Used to transform the macros within the extension content.
      */
     private final Transformation macroTransformation;
+    
+    /**
+     * Used to precise the author the rights should be checked against.
+     */
+    private final ContentAuthorController contentAuthorController;
 
     /**
      * Default constructor.
@@ -113,6 +116,7 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
         this.syntax = syntax;
         this.macroTransformation = componentManager.getInstance(Transformation.class, "macro");
         this.serializer = componentManager.getInstance(EntityReferenceSerializer.TYPE_STRING);
+        this.contentAuthorController = componentManager.getInstance(ContentAuthorController.class);
     }
 
     @Override
@@ -147,17 +151,19 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
         XDOM transformedXDOM = xdom.clone();
 
         // Perform macro transformations.
+        TransformationContext transformationContext = new TransformationContext(xdom, syntax);
+        transformationContext.setId(this.getRoleHint());
         try {
-            TransformationContext transformationContext = new TransformationContext(xdom, syntax);
-            transformationContext.setId(this.getRoleHint());
-            ContentAuthorController cac = Utils.getComponent(ContentAuthorController.class);
             // For this transformation, rights should be checked against the panel content author.
-            cac.pushContentAuthor(authorReference);
+            // So, we use a content author controller to push the author of this panel in the authorization context.
+            // This means that rights would be checked against him.
+            contentAuthorController.pushContentAuthor(authorReference);
             macroTransformation.transform(transformedXDOM, transformationContext);
-            cac.popContentAuthor();
         } catch (TransformationException e) {
             LOGGER.error("Error while executing wiki component macro transformation for extension [{}]",
                 documentReference.toString());
+        } finally {
+            contentAuthorController.popContentAuthor(); 
         }
 
         return new CompositeBlock(transformedXDOM.getChildren());
