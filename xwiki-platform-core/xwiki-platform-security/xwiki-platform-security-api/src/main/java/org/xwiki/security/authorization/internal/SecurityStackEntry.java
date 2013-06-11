@@ -25,7 +25,7 @@ import org.xwiki.model.reference.DocumentReference;
  * The security stack stores various items which defines the authorization context.
  *
  * @version $Id$
- * @since 4.3M2
+ * @since 5.2M1
  */
 public interface SecurityStackEntry
 {

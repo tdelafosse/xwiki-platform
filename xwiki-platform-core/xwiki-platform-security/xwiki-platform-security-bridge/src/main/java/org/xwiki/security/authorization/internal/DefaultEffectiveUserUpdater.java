@@ -32,7 +32,7 @@ import javax.inject.Inject;
  * Bridge component for setting the user in the legacy context.
  *
  * @version $Id$
- * @since 4.4RC1
+ * @since 5.2M1
  */
 @Component
 @Singleton

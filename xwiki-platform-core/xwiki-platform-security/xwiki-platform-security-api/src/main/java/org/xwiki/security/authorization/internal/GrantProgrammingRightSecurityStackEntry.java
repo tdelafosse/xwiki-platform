@@ -25,7 +25,7 @@ import org.xwiki.model.reference.DocumentReference;
  * This is an entry that grants programming rights while at the top of the security stack.
  *
  * @version $Id$
- * @since 4.3M2
+ * @since 5.2M1
  */
 public class GrantProgrammingRightSecurityStackEntry implements SecurityStackEntry
 {

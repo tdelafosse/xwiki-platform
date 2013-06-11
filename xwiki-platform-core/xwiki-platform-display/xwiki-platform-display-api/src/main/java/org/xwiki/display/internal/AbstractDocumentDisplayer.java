@@ -32,7 +32,7 @@ import org.xwiki.security.authorization.PrivilegedModeController;
  * Abstract class for performing common preparations before actually displaying.
  * 
  * @version $Id$
- * @since 4.3M2
+ * @since 5.2M1
  */
 public abstract class AbstractDocumentDisplayer implements DocumentDisplayer, Initializable
 {

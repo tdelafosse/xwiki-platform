@@ -45,7 +45,7 @@ import java.util.Collections;
  * AuthorizationContextFactory.
  *
  * @version $Id$
- * @since 4.3M1
+ * @since 5.2M1
  */
 @RunWith(JMock.class)
 public class ConservativeContentAuthorResolverTest

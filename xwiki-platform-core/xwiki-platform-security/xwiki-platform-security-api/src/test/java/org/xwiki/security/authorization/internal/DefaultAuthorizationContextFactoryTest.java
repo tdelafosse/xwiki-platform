@@ -55,7 +55,7 @@ import org.junit.Test;
  * Default authorization context factory test.
  *
  * @version $Id$
- * @since 4.3M1
+ * @since 5.2M1
  */
 @MockingRequirement(value=DefaultAuthorizationContextFactory.class,
                     exceptions=ComponentManager.class)

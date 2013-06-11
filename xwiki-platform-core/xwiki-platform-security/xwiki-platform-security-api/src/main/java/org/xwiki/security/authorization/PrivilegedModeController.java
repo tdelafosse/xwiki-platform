@@ -29,7 +29,7 @@ import java.lang.reflect.Type;
  * Interface for disabling the privileged mode in the authorization context.
  *
  * @version $Id$
- * @since 4.3M1
+ * @since 5.2M1
  */
 @Role
 public interface PrivilegedModeController

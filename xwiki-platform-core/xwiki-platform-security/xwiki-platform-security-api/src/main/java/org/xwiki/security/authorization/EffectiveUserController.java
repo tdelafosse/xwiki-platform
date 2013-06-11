@@ -27,7 +27,7 @@ import org.xwiki.component.annotation.Role;
  * Interface for changing the effective user in the authorization context.
  *
  * @version $Id$
- * @since 4.3M1
+ * @since 5.2M1
  */
 @Role
 public interface EffectiveUserController

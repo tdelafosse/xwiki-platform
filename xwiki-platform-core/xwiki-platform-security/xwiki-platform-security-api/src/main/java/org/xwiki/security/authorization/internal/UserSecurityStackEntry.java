@@ -25,7 +25,7 @@ import org.xwiki.model.reference.DocumentReference;
  * This is an entry that holds an explicit user reference.
  *
  * @version $Id$
- * @since 4.3M2
+ * @since 5.2M1
  */
 public class UserSecurityStackEntry implements SecurityStackEntry
 {

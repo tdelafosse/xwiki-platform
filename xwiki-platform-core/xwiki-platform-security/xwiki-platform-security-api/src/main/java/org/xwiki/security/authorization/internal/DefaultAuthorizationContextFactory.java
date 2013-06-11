@@ -54,7 +54,7 @@ import org.xwiki.model.reference.DocumentReference;
  * Default implementation of authorization context factory.
  *
  * @version $Id$
- * @since 4.3M1
+ * @since 5.2M1
  */
 @Component
 @Named("defaultAuthorizationContextFactory")

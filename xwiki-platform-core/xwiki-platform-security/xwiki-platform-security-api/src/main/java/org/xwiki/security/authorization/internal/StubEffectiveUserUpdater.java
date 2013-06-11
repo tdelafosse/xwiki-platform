@@ -26,7 +26,7 @@ import javax.inject.Singleton;
 /**
  * This purpose of this stub is to avoid having the integration tests depend on xwiki-security-bridge.
  * 
- * @since 4.4RC1
+ * @since 5.2M1
  * @version $Id$
  */
 @Component

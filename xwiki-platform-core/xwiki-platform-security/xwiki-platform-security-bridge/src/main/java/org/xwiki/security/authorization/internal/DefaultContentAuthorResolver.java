@@ -31,7 +31,7 @@ import javax.inject.Singleton;
  * Bridge component for resolving content author on behalf of the AuthorizationContextFactory.
  *
  * @version $Id$
- * @since 4.3M2
+ * @since 5.2M1
  */
 @Component
 @Singleton

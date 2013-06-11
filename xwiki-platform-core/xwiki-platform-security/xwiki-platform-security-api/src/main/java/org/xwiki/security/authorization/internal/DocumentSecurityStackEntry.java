@@ -26,7 +26,7 @@ import org.xwiki.bridge.DocumentModelBridge;
  * This is an entry that stores an actual context document.
  *
  * @version $Id$
- * @since 4.3M2
+ * @since 5.2M1
  */
 public class DocumentSecurityStackEntry implements SecurityStackEntry
 {
