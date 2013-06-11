@@ -22,7 +22,8 @@ package org.xwiki.security.authorization.internal;
 import org.xwiki.model.reference.DocumentReference;
 
 /**
- * This is an entry that holds an explicit user reference.
+ * This is an entry that holds an explicit user reference. This user would be considered as the content author 
+ * while this entry is at the top of the security stack. He would be used to decide what rights should be granted.
  *
  * @version $Id$
  * @since 5.2M1

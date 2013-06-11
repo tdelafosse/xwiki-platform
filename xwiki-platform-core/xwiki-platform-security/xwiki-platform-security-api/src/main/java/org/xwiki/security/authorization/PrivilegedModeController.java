@@ -27,6 +27,7 @@ import java.lang.reflect.Type;
 
 /**
  * Interface for disabling the privileged mode in the authorization context.
+ * If this mode is disabled, no PR would be granted.
  *
  * @version $Id$
  * @since 5.2M1

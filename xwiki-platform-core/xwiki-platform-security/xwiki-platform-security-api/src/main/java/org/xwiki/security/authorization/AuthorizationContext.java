@@ -23,7 +23,7 @@ import org.xwiki.model.reference.DocumentReference;
 
 /**
  * AuthorizationContext encapsulates the authorization information that is used for granting access to various
- * resources.  The athorization context cannot be modified directly, so it is safe to make it available to unprivileged
+ * resources. The authorization context cannot be modified directly, so it is safe to make it available to unprivileged
  * code.
  *
  * @version $Id$

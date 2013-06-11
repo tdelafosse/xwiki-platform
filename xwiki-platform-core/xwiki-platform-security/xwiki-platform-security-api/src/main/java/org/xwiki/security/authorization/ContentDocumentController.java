@@ -27,7 +27,7 @@ import org.xwiki.component.annotation.Role;
  * Interface for changing the security context document from which the content author will be resolved in the
  * authorization context.
  *
- * The contetn document controller must always be used with a try-finally statement to ensure that the document is
+ * The content document controller must always be used with a try-finally statement to ensure that the document is
  * correctly popped of the security stack.
  *
  * @version $Id$
@@ -39,7 +39,7 @@ public interface ContentDocumentController
 
     /**
      * Set a new document from where the content author will be extracted and set in the authorization context, while
-     * maintaing a stack of previous security context entries.
+     * maintaining a stack of previous security context entries.
      *
      * @param document The new content document.
      */

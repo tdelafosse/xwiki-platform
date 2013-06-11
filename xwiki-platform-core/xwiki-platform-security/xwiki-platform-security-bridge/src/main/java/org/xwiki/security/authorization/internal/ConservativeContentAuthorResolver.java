@@ -33,6 +33,9 @@ import javax.inject.Singleton;
 
 /**
  * Bridge component for resolving content author on behalf of the AuthorizationContextFactory.
+ * This author resolver returns null if the document is not marked for Programming Rights (i.e
+ * contains a "required rights" object). This enables users with PR whether they want to delegate
+ * PR to this document.  
  *
  * @version $Id$
  * @since 5.2M1

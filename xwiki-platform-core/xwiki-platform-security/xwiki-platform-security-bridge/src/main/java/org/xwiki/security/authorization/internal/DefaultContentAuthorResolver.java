@@ -29,6 +29,9 @@ import javax.inject.Singleton;
 
 /**
  * Bridge component for resolving content author on behalf of the AuthorizationContextFactory.
+ * If the document to find the content author for is dirty (i.e has been changed since last save),
+ * or is new, we return null, as we can't be certain of its true author. This should solve issues
+ * like XWiki-6844.
  *
  * @version $Id$
  * @since 5.2M1

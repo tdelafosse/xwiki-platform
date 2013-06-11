@@ -24,7 +24,8 @@ import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.component.annotation.Role;
 
 /**
- * Interface for changing the content author in the authorization context.
+ * Interface for changing the content author in the authorization context. The rights would be granted according to the
+ * last content author pushed in the authorization context.
  *
  * The content author controller should always be used in a try-finally statement to ensure that the content author is
  * correctly popped of the stack.

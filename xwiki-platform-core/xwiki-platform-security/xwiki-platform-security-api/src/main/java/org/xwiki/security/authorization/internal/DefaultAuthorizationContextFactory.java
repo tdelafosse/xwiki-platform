@@ -78,10 +78,10 @@ public class DefaultAuthorizationContextFactory implements ExecutionContextIniti
     @Inject
     private Execution execution;
 
-    /** Used by the content athor controller to set the active content author. */
+    /** Used by the content author controller to set the active content author. */
     private ContentAuthorResolver contentAuthorResolver;
 
-    /** The component manater is only used during initialization. */
+    /** The component manager is only used during initialization. */
     @Inject
     private ComponentManager componentManager;
 
@@ -90,7 +90,7 @@ public class DefaultAuthorizationContextFactory implements ExecutionContextIniti
     @Named("xwikiproperties")
     private ConfigurationSource configuration;
 
-    /** For backwards compliancy with old xwiki context.  */
+    /** For backwards compliance with old xwiki context.  */
     @Inject
     private EffectiveUserUpdater effectiveUserUpdater;
 
@@ -173,7 +173,7 @@ public class DefaultAuthorizationContextFactory implements ExecutionContextIniti
     }
 
     /**
-     * The autorization context implementation used by this autorization context factory.
+     * The authorization context implementation used by this authorization context factory.
      */
     private class PrivateAuthorizationContext implements AuthorizationContext
     {

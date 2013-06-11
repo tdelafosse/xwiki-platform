@@ -24,7 +24,7 @@ import org.xwiki.component.annotation.Role;
 /**
  * Interface for temporarily granting programming rights.
  *
- * Pushing a "grant all" entry will not override any subsequent security entries pushed to the stack.
+ * Pushing a "grant programming rights" entry will not override any subsequent security entries pushed to the stack.
  *
  * The grant all controller must always be used in a try-finally statement to ensure that the grant-all security stack
  * entry is correctly popped of the stack.
