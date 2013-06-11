@@ -347,7 +347,6 @@ public class DefaultAuthorizationContextFactoryTest extends AbstractMockingCompo
         // Let's change the state, so that the new context would be called.
         state.become("newContext");
 
-        System.out.println("Has prop ? : " + execution.getContext().hasProperty("privileged_mode_disabled"));
         Assert.assertTrue(authorizationContext.isPrivileged());
 
         state.become("normal");

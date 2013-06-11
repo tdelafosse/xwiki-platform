@@ -143,7 +143,8 @@ public class DisplayScriptService implements ScriptService
         contentDocumentController.pushContentDocument(documentModel);
         try {
             DocumentDisplayer displayer = componentManager.getInstance(DocumentDisplayer.class, displayerHint);
-            return renderXDOM(displayer.display(getDocument(document), displayerParameters), outputSyntax);
+            return renderXDOM(displayer.display(
+                getDocument(document), displayerParameters, getDocument(document)), outputSyntax);
         } catch (Exception e) {
             logger.error("Failed to display document [{}].", document.getPrefixedFullName(), e);
             return null;
