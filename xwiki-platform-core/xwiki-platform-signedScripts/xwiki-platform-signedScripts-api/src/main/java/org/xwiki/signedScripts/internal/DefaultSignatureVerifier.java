@@ -72,7 +72,7 @@ public class DefaultSignatureVerifier implements SignatureVerifier
     private Execution execution;
     
     /**
-     * To get doc ref.
+     * To get doc reference.
      */
     @Inject
     @Named("current")
@@ -82,7 +82,7 @@ public class DefaultSignatureVerifier implements SignatureVerifier
     public boolean verifySignature(String id, String content, String contentDoc)
     {
         try {
-            logger.warn("Verifying signature for content : " + content);
+            logger.debug("Verifying signature for content : " + content);
             // Reference to the document containing the script.
             DocumentReference scriptDoc;
             if (contentDoc.equals("")) {
@@ -90,7 +90,7 @@ public class DefaultSignatureVerifier implements SignatureVerifier
             } else {
                 scriptDoc = resolver.resolve(contentDoc);
             }
-            logger.warn("Content doc is : " + scriptDoc.toString());
+            logger.debug("Content doc is : " + scriptDoc.toString());
             DocumentReference classRef = new DocumentReference("xwiki", "SignedScripts", "SignatureClass");
             int n = documentAccessBridge.getObjectNumber(scriptDoc, classRef, "id", id);
             // If there is no corresponding object, it means the script hasn't been signed.
@@ -101,7 +101,7 @@ public class DefaultSignatureVerifier implements SignatureVerifier
             String signature = documentAccessBridge.getProperty(scriptDoc, classRef, n, "signature").toString();
             String author = documentAccessBridge.getProperty(scriptDoc, classRef, n, "author").toString();
             DocumentReference authorRef = resolver.resolve(author);
-            logger.warn("Author ref is : " + authorRef.toString());
+            logger.debug("Author ref is : " + authorRef.toString());
             String signedContent = authorRef.toString() + " : " + content;
             if (verifyPureSignature(signature, signedContent, certificate)) {
                 authorizationContext.pushEntry(authorRef);
@@ -125,7 +125,7 @@ public class DefaultSignatureVerifier implements SignatureVerifier
      */
     protected boolean verifyPureSignature(String signature, String content, String filename)
     {
-        logger.warn("Found signature object");
+        logger.debug("Found signature object");
         byte[] decodedSignature = Base64.decode(signature);
         try {
             PublicKey publicKey = keyHandler.getPublicKey(filename);

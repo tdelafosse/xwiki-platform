@@ -67,7 +67,7 @@ public class DefaultSignedScriptsAuthorizationContext implements SignedScriptsAu
     @Override
     public void pushEntry(DocumentReference userRef)
     {
-        logger.warn("Pushing entry : " + userRef.toString());
+        logger.debug("Pushing entry : " + userRef.toString());
         Stack<DocumentReference> stackEntry = getStackEntry();
         stackEntry.push(userRef);
     }
@@ -75,7 +75,7 @@ public class DefaultSignedScriptsAuthorizationContext implements SignedScriptsAu
     @Override
     public void popEntry()
     {
-        logger.warn("Popping entry");
+        logger.debug("Popping entry");
         Stack<DocumentReference> stackEntry = getStackEntry();
         if (!stackEntry.isEmpty()) {
             stackEntry.pop();
