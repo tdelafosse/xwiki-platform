@@ -1,0 +1,5 @@
+org.xwiki.signedScripts.internal.DefaultSignatureGenerator
+org.xwiki.signedScripts.internal.DefaultSignatureVerifier
+org.xwiki.signedScripts.internal.DefaultKeyPairHandler
+org.xwiki.signedScripts.internal.SignedScriptsScriptService
+org.xwiki.signedScripts.internal.DefaultSignedScriptsAuthorizationContext

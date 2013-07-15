@@ -41,6 +41,9 @@
       #end
     #end
   #end
+  ## Let's use the JS needed for signign scripts.
+  #set($discard = $xwiki.jsx.use('SignedScripts.Signing mechanism', {'doc' : "$doc.fullName", 'editor' : "$editor"}))
+  #set($discard = $xwiki.ssx.use('SignedScripts.Signing mechanism'))
   #if($editor == 'inline')
     ## The inline editor uses the view layout, unlike the rest of the editors.
     #template('startpage.vm')

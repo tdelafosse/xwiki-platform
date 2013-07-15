@@ -31,6 +31,7 @@ import org.xwiki.model.reference.WikiReference;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 import org.xwiki.security.internal.XWikiConstants;
+import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -54,6 +55,9 @@ public class XWikiCachingRightService implements XWikiRightService
 
     /** The delete action. */
     private static final String LOGIN_ACTION = "login";
+    
+    /** The 'true' string. */
+    private static final String TRUE = "true";
 
     /**
      * Map containing all known actions.
@@ -136,6 +140,10 @@ public class XWikiCachingRightService implements XWikiRightService
     private final AuthorizationManager authorizationManager
         = Utils.getComponent(AuthorizationManager.class);
 
+    /** Authorization context for signed scripts. */
+    private final SignedScriptsAuthorizationContext authorizationContext
+        = Utils.getComponent(SignedScriptsAuthorizationContext.class);
+    
     /**
      * Specialized map with a chainable put action to avoid exceeding code complexity during initialization.
      */
@@ -207,7 +215,7 @@ public class XWikiCachingRightService implements XWikiRightService
                  * will call checkAccess with action 'view', if the document 'XWiki.XWikiLogin' exists.
                  */
                 && !LOGIN_ACTION.equals(context.getAction())
-                && !context.getWiki().Param("xwiki.hidelogin", "false").equalsIgnoreCase("true")) {
+                && !context.getWiki().Param("xwiki.hidelogin", "false").equalsIgnoreCase(TRUE)) {
                 context.getWiki().getAuthService().showLogin(context);
             }
         } catch (XWikiException e) {
@@ -349,13 +357,13 @@ public class XWikiCachingRightService implements XWikiRightService
     @Override
     public boolean hasProgrammingRights(XWikiContext context)
     {
-        // Once dropPermissions has been called, the document in the
-        // context cannot have programming permission.
-        if (context.hasDroppedPermissions()) {
-            return false;
+        // Grant PR if and only if the current script has been signed.
+        if (authorizationContext.hasEntry()) {
+            DocumentReference userRef = authorizationContext.getLastEntry();
+            WikiReference wiki = new WikiReference(context.getDatabase());
+            return authorizationManager.hasAccess(Right.PROGRAM, userRef, wiki);
         }
-        XWikiDocument sdoc = (XWikiDocument) context.get("sdoc");
-        return hasProgrammingRights((sdoc != null) ? sdoc : context.getDoc(), context);
+        return false;
     }
 
     @Override

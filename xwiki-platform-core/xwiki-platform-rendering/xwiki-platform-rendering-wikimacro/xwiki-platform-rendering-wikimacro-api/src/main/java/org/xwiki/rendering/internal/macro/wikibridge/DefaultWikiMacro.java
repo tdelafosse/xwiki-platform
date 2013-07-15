@@ -36,6 +36,7 @@ import org.xwiki.rendering.block.MetaDataBlock;
 import org.xwiki.rendering.block.ParagraphBlock;
 import org.xwiki.rendering.block.XDOM;
 import org.xwiki.rendering.internal.macro.script.NestedScriptMacroEnabled;
+import org.xwiki.rendering.listener.MetaData;
 import org.xwiki.rendering.macro.Macro;
 import org.xwiki.rendering.macro.MacroExecutionException;
 import org.xwiki.rendering.macro.descriptor.MacroDescriptor;
@@ -222,6 +223,7 @@ public class DefaultWikiMacro implements WikiMacro, NestedScriptMacroEnabled
             // Perform internal macro transformations.
             TransformationContext txContext = new TransformationContext(context.getXDOM(), this.syntax);
             txContext.setId(context.getId());
+            txContext.getXDOM().getMetaData().addMetaData(MetaData.SOURCE, macroDocumentReference);
             macroTransformation.transform(wikiMacroMarker, txContext);
 
             return extractResult(wikiMacroMarker.getChildren(), macroBinding, context);

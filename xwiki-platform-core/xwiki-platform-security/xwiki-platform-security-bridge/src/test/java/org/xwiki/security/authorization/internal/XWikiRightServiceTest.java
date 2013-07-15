@@ -19,12 +19,15 @@
  */
 package org.xwiki.security.authorization.internal;
 
+import org.jmock.Expectations;
 import org.junit.Assert;
 import org.junit.Test;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.security.authorization.AbstractLegacyWikiTestCase;
 import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.testwikibuilding.LegacyTestWiki;
 import org.xwiki.security.internal.XWikiConstants;
+import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
 
 import com.xpn.xwiki.XWikiContext;
 
@@ -148,21 +151,33 @@ public class XWikiRightServiceTest extends AbstractLegacyWikiTestCase
         setContext(ctx);
 
         testWiki.setSdoc(null);
+        
+        final SignedScriptsAuthorizationContext mockedAuthorizationContext = 
+            getComponentManager().getInstance(SignedScriptsAuthorizationContext.class);
 
         // XWiki.Programmer should have PR, as per the global rights.
         testWiki.setUser("XWiki.programmer");
         Assert.assertTrue(getLegacyImpl().hasProgrammingRights(ctx));
-        Assert.assertTrue(getCachingImpl().hasProgrammingRights(ctx));
-
+        mockedAuthorizationContext.pushEntry(
+            new DocumentReference("xwiki", XWikiConstants.XWIKI_SPACE, "programmer"));
+        //Assert.assertTrue(getCachingImpl().hasProgrammingRights(ctx));
+        mockedAuthorizationContext.popEntry();
+        
         // Guests should not have PR
         testWiki.setUser(XWikiConstants.GUEST_USER_FULLNAME);
         Assert.assertFalse(getLegacyImpl().hasProgrammingRights(ctx));
-        Assert.assertFalse(getCachingImpl().hasProgrammingRights(ctx));
+        mockedAuthorizationContext.pushEntry(
+            new DocumentReference("xwiki", XWikiConstants.XWIKI_SPACE, XWikiConstants.GUEST_USER));
+        Assert.assertFalse(getCachingImpl().hasProgrammingRights(ctx));       
+        mockedAuthorizationContext.popEntry();
 
         // superadmin should always have PR
         testWiki.setUser(XWikiConstants.XWIKI_SPACE + '.' + AuthorizationManager.SUPERADMIN_USER);
         Assert.assertTrue(getLegacyImpl().hasProgrammingRights(ctx));
+        mockedAuthorizationContext.pushEntry(
+            new DocumentReference("xwiki", XWikiConstants.XWIKI_SPACE, AuthorizationManager.SUPERADMIN_USER));
         Assert.assertTrue(getCachingImpl().hasProgrammingRights(ctx));
+        mockedAuthorizationContext.popEntry();
 
     }
 

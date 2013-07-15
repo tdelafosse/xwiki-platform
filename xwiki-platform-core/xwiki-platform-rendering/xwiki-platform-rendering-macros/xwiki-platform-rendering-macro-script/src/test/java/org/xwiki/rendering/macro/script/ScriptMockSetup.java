@@ -24,8 +24,11 @@ import org.jmock.Mockery;
 import org.jmock.integration.junit4.JUnit4Mockery;
 import org.xwiki.bridge.DocumentAccessBridge;
 import org.xwiki.model.reference.AttachmentReferenceResolver;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.rendering.wiki.WikiModel;
+import org.xwiki.signedScripts.SignatureVerifier;
+import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
 import org.xwiki.test.jmock.MockingComponentManager;
 
 /**
@@ -43,6 +46,8 @@ public class ScriptMockSetup
     public DocumentReferenceResolver<String> documentReferenceResolver;
 
     public WikiModel wikiModel;
+    
+    public SignatureVerifier sVerifier;
 
     public ScriptMockSetup(MockingComponentManager componentManager) throws Exception
     {
@@ -67,5 +72,11 @@ public class ScriptMockSetup
         // Use a mock for the DocumentReference Resolver
         this.documentReferenceResolver =
             cm.registerMockComponent(mockery, DocumentReferenceResolver.TYPE_STRING, "current");
+        
+        this.sVerifier = cm.registerMockComponent(mockery, SignatureVerifier.class);
+        mockery.checking(new Expectations() {{
+            allowing(sVerifier).verifySignature(with(any(String.class)), with(any(String.class)), with(any(String.class)));
+            will(returnValue(true));
+        }});
     }
 }

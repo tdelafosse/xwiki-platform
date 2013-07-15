@@ -27,11 +27,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.context.Execution;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.observation.ObservationManager;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
+import org.xwiki.rendering.listener.MetaData;
 import org.xwiki.rendering.macro.AbstractMacro;
 import org.xwiki.rendering.macro.MacroContentParser;
 import org.xwiki.rendering.macro.MacroExecutionException;
@@ -42,6 +45,8 @@ import org.xwiki.rendering.transformation.MacroTransformationContext;
 import org.xwiki.rendering.util.ParserUtils;
 import org.xwiki.script.event.ScriptEvaluatedEvent;
 import org.xwiki.script.event.ScriptEvaluatingEvent;
+import org.xwiki.signedScripts.SignatureVerifier;
+import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
 
 /**
  * Base Class for script evaluation macros.
@@ -63,14 +68,31 @@ public abstract class AbstractScriptMacro<P extends ScriptMacroParameters> exten
      * The default description of the script macro content.
      */
     protected static final String CONTENT_DESCRIPTION = "the script to execute";
+    
+    /**
+     * The name of the property where the signature is stored.
+     */
+    protected static final String SIGNATURE = "signature";
+    
+    /**
+     * Name of the file where the public key is stored.
+     */
+    protected static final String FILENAME = "test"; 
+    
+    /**
+     * The default wiki.
+     */
+    protected static final String XWIKI = "xwiki";
+    
+    /**
+     * The XWiki space name.
+     */
+    protected static final String XWIKI_SPACE = "XWiki";
 
     /**
-     * Used to find if the current document's author has programming rights.
-     *
-     * @deprecated since 2.5M1 (not used any more)
+     * Used to find signature objects.
      */
     @Inject
-    @Deprecated
     protected org.xwiki.bridge.DocumentAccessBridge documentAccessBridge;
 
     /**
@@ -104,6 +126,24 @@ public abstract class AbstractScriptMacro<P extends ScriptMacroParameters> exten
      */
     @Inject
     private ObservationManager observation;
+    
+    /**
+     * Logger.
+     */
+    @Inject
+    private Logger logger;
+    
+    /**
+     * Signature verifier.
+     */
+    @Inject
+    private SignatureVerifier signatureVerifier;
+    
+    /**
+     * AuthorizationContext.
+     */
+    @Inject
+    private SignedScriptsAuthorizationContext authorizationContext;
 
     /**
      * Utility to remove the top level paragraph.
@@ -184,9 +224,25 @@ public abstract class AbstractScriptMacro<P extends ScriptMacroParameters> exten
         throws MacroExecutionException
     {
         List<Block> result = Collections.emptyList();
+        
+        DocumentReference guestRef = new DocumentReference(XWIKI, XWIKI_SPACE, "Guest");
 
         if (StringUtils.isNotEmpty(content)) {
             try {
+                //If the content comes from another document, we should find this "source" in the context.
+                String source;
+                if (context.getXDOM().getMetaData().getMetaData().containsKey(MetaData.SOURCE)) {
+                    source = context.getXDOM().getMetaData().getMetaData(MetaData.SOURCE).toString();
+                } else {
+                    source = "";
+                }
+                String id = parameters.getId();
+                //If this script has an id, it means it could have been signed.
+                //If there is a valid signature associated, the script author is pushed in the authorization context
+                //(this is made inside the verifySignature method), else we push guest user in the context.
+                if (id == null || !signatureVerifier.verifySignature(id, content, source)) {
+                    authorizationContext.pushEntry(guestRef);
+                }
                 // send evaluation starts event
                 ScriptEvaluatingEvent event = new ScriptEvaluatingEvent(getDescriptor().getId().getId());
                 this.observation.notify(event, context, parameters);
@@ -203,6 +259,7 @@ public abstract class AbstractScriptMacro<P extends ScriptMacroParameters> exten
             } finally {
                 // send evaluation finished event
                 this.observation.notify(new ScriptEvaluatedEvent(getDescriptor().getId().getId()), context, parameters);
+                authorizationContext.popEntry();
             }
         }
 

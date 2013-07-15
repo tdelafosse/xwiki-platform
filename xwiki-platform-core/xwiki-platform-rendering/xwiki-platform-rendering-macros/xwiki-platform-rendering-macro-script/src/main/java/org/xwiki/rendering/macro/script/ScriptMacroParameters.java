@@ -43,6 +43,11 @@ public class ScriptMacroParameters
      * @see #getJars()
      */
     private String jarURLsAsString;
+
+    /**
+     * Id.
+     */
+    private String id = "";
     
     /**
      * @param output indicate the output result has to be inserted back in the document.
@@ -99,5 +104,22 @@ public class ScriptMacroParameters
     public String getJars()
     {
         return this.jarURLsAsString;
+    }
+    
+    /**
+     * @param id Id of the macro.
+     */
+    @PropertyDescription("Id of the macro.")
+    public void setId(String id)
+    {
+        this.id = id;
+    }
+    
+    /**
+     * @return the id of the macro.
+     */
+    public String getId()
+    {
+        return this.id;
     }
 }

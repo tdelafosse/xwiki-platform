@@ -34,6 +34,7 @@ import org.xwiki.model.reference.EntityReferenceSerializer;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.CompositeBlock;
 import org.xwiki.rendering.block.XDOM;
+import org.xwiki.rendering.listener.MetaData;
 import org.xwiki.rendering.syntax.Syntax;
 import org.xwiki.rendering.transformation.Transformation;
 import org.xwiki.rendering.transformation.TransformationContext;
@@ -147,6 +148,11 @@ public class PanelWikiUIExtension implements UIExtension, WikiComponent
         try {
             TransformationContext transformationContext = new TransformationContext(xdom, syntax);
             transformationContext.setId(this.getRoleHint());
+            // Wrap Blocks in a MetaDataBlock with the "source" meta data specified so that we know from where the
+            // content comes and "base" meta data so that reference are properly resolved
+            //MetaDataBlock metadata = new MetaDataBlock(transformedXDOM.getChildren(), transformedXDOM.getMetaData());
+            String source = serializer.serialize(documentReference);
+            transformationContext.getXDOM().getMetaData().addMetaData(MetaData.SOURCE, source);
             macroTransformation.transform(transformedXDOM, transformationContext);
         } catch (TransformationException e) {
             LOGGER.error("Error while executing wiki component macro transformation for extension [{}]",
