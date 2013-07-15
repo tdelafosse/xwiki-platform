@@ -62,23 +62,4 @@ public interface SignedScriptsAuthorizationContext
      * @return true if the stack contains an entry.
      */
     boolean hasEntry();
-    
-    /**
-     * To push a document, representing the document where the current script is executed.
-     * 
-     * @param ref documentReference to push.
-     */
-    void pushDocument(DocumentReference ref);
-    
-    /**
-     * To pop the last document.
-     */
-    void popDocument();
-    
-    /**
-     * Get the top document.
-     * 
-     * @return last document pushed.
-     */
-    DocumentReference getLastDoc();
 }

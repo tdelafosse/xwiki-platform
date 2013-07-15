@@ -96,31 +96,6 @@ public class DefaultSignedScriptsAuthorizationContext implements SignedScriptsAu
         return !stackEntry.isEmpty();
     }
     
-    @Override
-    public void pushDocument(DocumentReference ref)
-    {
-        logger.warn("Pushing document : " + ref.toString());
-        Stack<DocumentReference> stackEntry = getDocStackEntry();
-        stackEntry.push(ref);   
-    }
-    
-    @Override
-    public void popDocument()
-    {
-        logger.warn("Popping document");
-        Stack<DocumentReference> stackEntry = getDocStackEntry();
-        if (!stackEntry.isEmpty()) {
-            stackEntry.pop();
-        }   
-    }
-    
-    @Override
-    public DocumentReference getLastDoc()
-    {
-        Stack<DocumentReference> stackEntry = getDocStackEntry();
-        return stackEntry.peek();
-    }
-    
     /**
      * Retrieving the stack entry.
      * 
