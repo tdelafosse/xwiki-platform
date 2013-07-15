@@ -26,42 +26,11 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.xwiki.platform</groupId>
-    <artifactId>xwiki-platform-core</artifactId>
+    <artifactId>xwiki-platform-signedScripts</artifactId>
     <version>5.2-SNAPSHOT</version>
   </parent>
-  <artifactId>xwiki-platform-signedScripts</artifactId>
-  <name>XWiki Platform - SignedScripts - Parent POM</name>
-  <packaging>pom</packaging>
-  <description>XWiki Platform - SignedScripts - Parent POM</description>
-  <modules>
-    <module>xwiki-platform-signedScripts-api</module>
-    <module>xwiki-platform-signedScripts-ui</module>
-  </modules>
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-net</groupId>
-      <artifactId>commons-net</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-    </dependency>
-  </dependencies>
+  <artifactId>xwiki-platform-signedScripts-ui</artifactId>
+  <name>XWiki Platform - Signed Scripts - UI</name>
+  <packaging>xar</packaging>
+  <description>XWiki Platform - Signed Scripts - UI</description>
 </project>
-       

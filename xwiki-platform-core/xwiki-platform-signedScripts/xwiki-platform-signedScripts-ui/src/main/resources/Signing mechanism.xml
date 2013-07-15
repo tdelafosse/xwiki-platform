@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xwikidoc>
+  <web>SignedScripts</web>
+  <name>Signing mechanism</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <parent>SignedScripts.WebHome</parent>
+  <creator>xwiki:XWiki.Admin</creator>
+  <author>xwiki:XWiki.Admin</author>
+  <customClass/>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <creationDate>1372844406000</creationDate>
+  <date>1373885009000</date>
+  <contentUpdateDate>1373885009000</contentUpdateDate>
+  <version>1.1</version>
+  <title>Signing mechanism</title>
+  <defaultTemplate/>
+  <validationScript/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>false</hidden>
+  <object>
+    <class>
+      <name>XWiki.JavaScriptExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators> ,|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators> ,|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage=Always on this page|onDemand=On demand|always=Always on this wiki</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <name>SignedScripts.Signing mechanism</name>
+    <number>0</number>
+    <className>XWiki.JavaScriptExtension</className>
+    <guid>4179cdc2-018e-4e22-be6c-ed7e077a614d</guid>
+    <property>
+      <cache>forbid</cache>
+    </property>
+    <property>
+      <code>// Make sure the XWiki 'namespace' and the ModalPopup class exist.
+if(typeof(XWiki) == "undefined" || typeof(XWiki.widgets) == "undefined" || typeof(XWiki.widgets.ModalPopup) == "undefined") {
+ if (typeof console != "undefined" &amp;&amp; typeof console.warn == "function") {
+    console.warn("[MessageBox widget] Required class missing: XWiki.widgets.ModalPopup");
+  }
+} else {
+// A slightly modified version of the confirmation box
+XWiki.widgets.SignedScriptsConfirmationBox = Class.create(XWiki.widgets.ModalPopup, {
+ /** Default displayed texts */
+  defaultInteractionParameters : {
+   confirmationText: "$msg.get('core.widgets.confirmationBox.defaultQuestion')",
+   yesButtonText: "$msg.get('core.widgets.confirmationBox.button.yes')",
+   noButtonText: "$msg.get('core.widgets.confirmationBox.button.no')"
+  },
+ /** Constructor. Registers the key listener that pops up the dialog. */
+  initialize : function($super, behavior, interactionParameters, scriptsHash) {
+   this.interactionParameters = Object.extend(Object.clone(this.defaultInteractionParameters), interactionParameters || {});
+   $super(
+     this.createContent(this.interactionParameters),
+      {
+       "show"  : { method : this.showDialog,  keys : [] },
+       "yes"   : { method : this.onYes,       keys : ['Enter', 'Space'] },
+       "no"    : { method : this.onNo,        keys : ['Esc'] },
+       "close" : { method : this.closeDialog, keys : [] }
+      },
+      {
+         displayCloseButton : false,
+         removeOnClose : true
+      }
+    );
+   this.showDialog();
+   this.setClass("confirmation");
+   this.behavior = behavior || { };
+   this.scriptsHash = scriptsHash || { };
+  },
+ /** Create the content of the confirmation dialog: icon + question text, buttons */
+  createContent : function (data) {
+   var question = new Element("div", {"class" : "question"}).update(data.confirmationText);
+   var buttons = new Element("div", {"class" : "buttons"});
+   var yesButton = this.createButton("button", data.yesButtonText, "(Enter)", "");
+   var noButton = this.createButton("button", data.noButtonText, "(Esc)", "");
+    buttons.insert(yesButton);
+    buttons.insert(noButton);
+   var content =  new Element("div");
+    content.insert(question).insert(buttons);
+    Event.observe(yesButton, "click", this.onYes.bindAsEventListener(this));
+    Event.observe(noButton, "click", this.onNo.bindAsEventListener(this));
+   return content;
+  },
+  onYes : function() {
+   var checkboxes = $$('.xdialog-content')[0].select("input[type='checkbox']");
+   var scriptsHash = this.scriptsHash;
+   checkboxes.each(function(checkbox) {
+     if(!checkbox.checked) {
+       var id = checkbox.getAttribute('value');
+       scriptsHash.unset(id);
+     }
+   });
+   this.closeDialog();
+   if (typeof (this.behavior.onYes) == 'function') {  //$$('input[name=action_save]')[0].observe('click', function(event){
+  //document.observe("xwiki:actions:save", function(event){
+     this.behavior.onYes();
+    }
+  },
+  onNo : function() {
+   this.closeDialog();
+   if (typeof (this.behavior.onNo) == 'function') {
+     this.behavior.onNo();
+    }
+  }
+});
+} // if the parent widget is defined
+
+//URL of the page containing the script creating / updating the signature objects.
+#set($url = "$xwiki.getURL('SignedScripts.Signing', 'view')")
+//Current doc
+#set($document = $escapetool.javascript("$request.doc"))
+//Current edit mode
+#set($editor = $escapetool.javascript("$request.editor"))
+//Indicates that no click has been simulated yet
+var firstTime = true;
+  
+document.observe("xwiki:dom:loaded", function(){
+  var previewButton = $$('.buttons')[0].select('.button[name="action_preview"]')[0];
+  var saveAndContinueButton = $$('.buttons')[0].select('.button[name="action_saveandcontinue"]')[0];
+  var saveButton = $$('.buttons')[0].select('.button[name="action_save"]')[0];
+  var classSaveButton = $$('.buttons')[0].select('.button[name="action_propupdate"]')[0];
+  if(previewButton != undefined) {
+    previewButton.observe('click', function(event) {
+      if(firstTime) {
+        event.stop();
+        firstTime=false;
+        button = previewButton ;
+        if ("$editor" == 'wiki') {
+          wikiSigning();
+        } else if ("$editor" == 'inline') {
+          inlineSigning();
+        } else if ("$editor" == 'wysiwyg') {
+          wysiwygSigning();
+        } else {
+          button.click();
+        }
+      }
+    });
+  }
+  if(saveAndContinueButton != undefined) {
+    saveAndContinueButton.observe('click', function(event) {
+      if(firstTime) {
+        event.stop();
+        firstTime=false;
+        button = saveAndContinueButton ;
+        if ("$editor" == 'wiki') {
+          wikiSigning();
+        } else if ("$editor" == 'object') {
+          objectSigning();
+        } else if ("$editor" == 'inline') {
+          inlineSigning();
+        } else if ("$editor" == 'wysiwyg') {
+          wysiwygSigning();
+        } else if("$editor" == 'class') {
+          classSigning();
+        } else {
+          button.click();
+        }
+        //As this is save and continue, we need to be able to perform this step again on later save.
+        firstTime=true;
+      }
+    });
+  }
+  if(saveButton != undefined) {
+    saveButton.observe('click', function(event) {
+      if(firstTime) {
+        event.stop();
+        firstTime=false;
+        button = saveButton ;
+        if ("$editor" == 'wiki') {
+          wikiSigning();
+        } else if ("$editor" == 'object') {
+          objectSigning();
+        } else if ("$editor" == 'inline') {
+          inlineSigning();
+        } else if ("$editor" == 'wysiwyg') {
+          wysiwygSigning();
+        } else {
+          button.click();
+        }
+      }
+    });
+  }
+  if(classSaveButton != undefined &amp;&amp; "$editor" == 'class') {
+    classSaveButton.observe('click', function(event) {
+      if(firstTime) {
+        event.stop();
+        firstTime=false;
+        button = classSaveButton ;
+        if ("$editor" == 'class') {
+          classSigning();
+        } else {
+          button.click();
+        }
+      }
+    });
+  }
+});
+
+function wikiSigning() {
+  var content = $('xwikieditcontent').select('textarea#content')[0].value;
+  var scriptsHash = getScripts(content);
+  var params = computeParams(scriptsHash);
+  if(scriptsHash.values().size() &gt; 0) {
+    new XWiki.widgets.SignedScriptsConfirmationBox(
+    {
+      onYes : function() { ajaxSigning(scriptsHash); },
+      onNo : function() { button.click(); }
+    },
+    params,
+    scriptsHash
+    ) 
+  } else {
+    button.click();
+  }
+}
+
+function objectSigning(button) {
+  var content = "";
+  var textareas = $('xwikiobjects').select('textarea');
+  for (var i=0; i&lt;textareas.size(); i++) {
+    content += textareas[i].value + "\n\n";
+  }
+  var scriptsHash = getScripts(content);
+  var params = computeParams(scriptsHash);
+  if(scriptsHash.values().size() &gt; 0) {
+    new XWiki.widgets.SignedScriptsConfirmationBox(
+    {
+      onYes : function() { ajaxSigning(scriptsHash); },
+      onNo : function() { button.click(); }
+    },
+    params,
+    scriptsHash
+    ) 
+  } else {
+    button.click();
+  }
+}
+
+function inlineSigning() {
+  var content = "";
+  var textareas = $('mainContentArea').select('textarea');
+  for (var i=0; i&lt;textareas.size(); i++) {
+    content += textareas[i].value + "\n\n";
+  }
+  var scriptsHash = getScripts(content);
+  var params = computeParams(scriptsHash);
+  if(scriptsHash.values().size() &gt; 0) {
+    new XWiki.widgets.SignedScriptsConfirmationBox(
+    {
+      onYes : function() { ajaxSigning(scriptsHash); },
+      onNo : function() { button.click(); }
+    },
+    params,
+    scriptsHash
+    ) 
+  } else {
+    button.click();
+  }
+}
+
+function wysiwygSigning() {
+  var scriptsHash = new Hash();
+  var content = $('xwikieditcontent').select('textarea#content')[0].getValue();
+  var hidden = $$('.xRichTextEditor')[0].getAttribute('aria-hidden');
+  // If the xRichTextEditor is hidden, we are in "source" mode
+  if (hidden == 'false') {
+    scriptsHash = getScriptsWysiwyg(content);
+  } else {
+    scriptsHash = getScripts(content);
+  }
+  var params = computeParams(scriptsHash);
+  if(scriptsHash.values().size() &gt; 0) {
+    new XWiki.widgets.SignedScriptsConfirmationBox(
+    {
+      onYes : function() { ajaxSigning(scriptsHash); },
+      onNo : function() { button.click(); }
+    },
+    params,
+    scriptsHash
+    ) 
+  } else {
+    button.click();
+  }
+}
+
+function classSigning() {
+  var content = "";
+  var textareas = $('xclassContent').select('textarea');
+  for (var i=0; i&lt;textareas.size(); i++) {
+    content += textareas[i].value + "\n\n";
+  }
+  var scriptsHash = getScripts(content);
+  var params = computeParams(scriptsHash);
+  if(scriptsHash.values().size() &gt; 0) {
+    new XWiki.widgets.SignedScriptsConfirmationBox(
+    {
+      onYes : function() { ajaxSigning(scriptsHash); },
+      onNo : function() { button.click(); }
+    },
+    params,
+    scriptsHash
+    ) 
+  } else {
+    button.click();
+  }
+}
+
+function ajaxSigning(scriptsHash) {
+  new Ajax.Request("$url", {
+    method: 'post',
+    parameters: scriptsHash,
+    onSuccess: function() { button.click();},
+    onFailure: function() { alert('Something went wrong...'); button.click(); }
+  });
+}
+
+/**
+ * Returns a hash containing the ids of the scripts to sign and their content.
+ */
+function getScripts(content) {
+  var scriptsHash = new Hash();
+  // Number of scripts to sign.
+  var nScripts = 0;
+  var start = "{{(velocity|groovy)\\s*id\\s*=\\s*('|\")?\\w*('|\")?\\s*}}";
+  //If we want to sign everything, we can use this regex instead
+  //var start = "{{(velocity|groovy)\\s*( id\\s*=\\s*('|\")?\\w*('|\")?)?\\s*}}";
+  var startScript = content.search(start);
+  var followingContent = content.substring(startScript);
+  var end = "{{\\s*/\\s*(velocity|groovy)\\s*}}";
+  var endScript = startScript + followingContent.search(end);
+  var scriptContent ;
+  var id ; 
+  // Let's find all the scripts
+  while(startScript != -1 &amp;&amp; endScript != -1) {
+    scriptContent = content.substring(startScript, endScript);
+    startScript = scriptContent.search("}}");
+    id = findId(scriptContent.substring(0, startScript));
+    scriptContent = scriptContent.substring(startScript+2);
+    // Remove the starting / ending newlines.
+    if(scriptContent.search('^\n') != -1) {
+      scriptContent = scriptContent.substring(1);
+    }
+    if(scriptContent.search('\n$') != -1) {
+      scriptContent = scriptContent.substring(0, scriptContent.length-1);
+    }
+    scriptsHash.set(id, scriptContent);
+    content = content.substring(endScript+2);
+    nScripts += 1;
+    startScript = content.search(start);
+    followingContent = content.substring(startScript);
+    endScript = startScript + followingContent.search(end);
+  }
+  if (nScripts &gt; 0) { 
+    // Let's add a reference to the current document, so that we will be able to know in which document the signature objects should be updated / created.
+    scriptsHash.set('currentDoc', "$document");
+  }
+  return scriptsHash;
+}
+
+/**
+ * Returns a hash containing the ids of the scripts to sign and their content. Used in wysiwyg mode when the extracted content is not in wiki syntax, but in Annotated XHTML 1.0.
+ * We should perhaps get rid of that and instead use the rendering to convert Annotated XHTML in wiki syntax, so that we don't need two "getScripts" methods.
+ */
+function getScriptsWysiwyg(content) {
+  var scriptsHash = new Hash();
+  // Number of scripts to sign.
+  var nScripts = 0;
+  var start = "&lt;!--startmacro:(velocity|groovy)\\|-\\|id=('|\")\\w*('|\")\\|-\\|";
+  var startScript = content.search(start);
+  var followingContent = content.substring(startScript);
+  var end = "--&gt;&lt;!--stopmacro--&gt;";
+  var endScript = startScript + followingContent.search(end);
+  var scriptContent ;
+  var id ; 
+  // Let's find all the scripts
+  while(startScript != -1 &amp;&amp; endScript != -1) {
+    scriptContent = content.substring(startScript, endScript);
+    startScript = scriptContent.search("('|\")\\|-\\|")+4;
+    id = findId(scriptContent.substring(0, startScript));
+    scriptContent = scriptContent.substring(startScript);
+    // Remove the starting / ending newlines.
+    if(scriptContent.search('^\n') != -1) {
+      scriptContent = scriptContent.substring(1);
+    }
+    if(scriptContent.search('\n$') != -1) {
+      scriptContent = scriptContent.substring(0, scriptContent.length-1);
+    }
+    scriptsHash.set(id, scriptContent)
+    content = content.substring(endScript+2);
+    nScripts += 1;
+    startScript = content.search(start);
+    followingContent = content.substring(startScript);
+    endScript = startScript + followingContent.search(end);
+  }
+  if(nScripts &gt; 0) {
+    // Let's add a reference to the current document, so that we will be able to know in which document the signature objects should be updated / created.
+    scriptsHash.set('currentDoc', "$document");
+  }
+  return scriptsHash;
+}
+
+/**
+ * Find the id of a script macro.
+ */
+function findId(content) {
+  var content = content.substring(content.search("id\\s*="));
+  var idStart = 0;
+  var idEnd = 0;
+  if(content.search("id\\s*=\\s*'") != -1) {
+    idStart = content.search("'");
+    content = content.substring(idStart+1);
+    idEnd = content.search("'");
+  } else if (content.search('id\\s*=\\s*"') != -1) {
+    idStart = content.search('"');
+    content = content.substring(idStart+1);
+    idEnd = content.search('"');
+  } else {
+    idStart = content.search("=");
+    content = content.substring(idStart+1);
+    content = content.substring(content.search('\\w'));
+    idEnd = content.search('\\s');
+    if(idEnd == -1) {
+      return content;
+    }
+  }
+  return content.substring(0, idEnd);
+}
+
+
+/**
+ * Compute the params used by the confirmation box. In particular, generate the text that would be displayed there.
+ */
+function computeParams(scriptsHash) {
+  var nScripts = scriptsHash.values().size()-1;
+  if(nScripts &gt; 0) {
+    var message = "There is " + nScripts + " scripts to be signed : &lt;br&gt;&lt;br&gt;";
+    scriptsHash.each(function(pair) {
+      if (pair.key != 'currentDoc') {
+        message = message + "&lt;input type='checkbox' checked='true' value='"+pair.key+"'&gt;Script with id &lt;em&gt;" + pair.key + "&lt;/em&gt; &lt;br&gt;&lt;div class='code'&gt;" + pair.value + "&lt;/div&gt;&lt;br&gt;";
+      }
+    });
+  }
+  var params = {
+    confirmationText: message + "Do you want to sign these scripts ?"
+  };
+  return params;
+}</code>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>1</parse>
+    </property>
+    <property>
+      <use>onDemand</use>
+    </property>
+  </object>
+  <object>
+    <class>
+      <name>XWiki.StyleSheetExtension</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <cache>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>cache</name>
+        <number>5</number>
+        <prettyName>Caching policy</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators> ,|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>long|short|default|forbid</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </cache>
+      <code>
+        <disabled>0</disabled>
+        <name>code</name>
+        <number>2</number>
+        <prettyName>Code</prettyName>
+        <rows>20</rows>
+        <size>50</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.TextAreaClass</classType>
+      </code>
+      <name>
+        <disabled>0</disabled>
+        <name>name</name>
+        <number>1</number>
+        <prettyName>Name</prettyName>
+        <size>30</size>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.StringClass</classType>
+      </name>
+      <parse>
+        <disabled>0</disabled>
+        <displayFormType>select</displayFormType>
+        <displayType>yesno</displayType>
+        <name>parse</name>
+        <number>4</number>
+        <prettyName>Parse content</prettyName>
+        <unmodifiable>0</unmodifiable>
+        <classType>com.xpn.xwiki.objects.classes.BooleanClass</classType>
+      </parse>
+      <use>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>use</name>
+        <number>3</number>
+        <prettyName>Use this extension</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators> ,|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>currentPage=Always on this page|onDemand=On demand|always=Always on this wiki</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </use>
+    </class>
+    <name>SignedScripts.Signing mechanism</name>
+    <number>0</number>
+    <className>XWiki.StyleSheetExtension</className>
+    <guid>6aabeac4-fa17-4afc-a313-4cff2d70a20a</guid>
+    <property>
+      <cache>long</cache>
+    </property>
+    <property>
+      <code>.xdialog-content .code {
+  overflow : auto;
+}</code>
+    </property>
+    <property>
+      <name/>
+    </property>
+    <property>
+      <parse>0</parse>
+    </property>
+    <property>
+      <use>currentPage</use>
+    </property>
+  </object>
+  <content>This page contains the JS used for signing scripts inside the wiki.</content>
+</xwikidoc>

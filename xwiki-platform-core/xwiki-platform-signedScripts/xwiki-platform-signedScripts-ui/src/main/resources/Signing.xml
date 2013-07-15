@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xwikidoc>
+  <web>SignedScripts</web>
+  <name>Signing</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <parent>SignedScripts.WebHome</parent>
+  <creator>xwiki:XWiki.Admin</creator>
+  <author>xwiki:XWiki.Admin</author>
+  <customClass/>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <creationDate>1372847342000</creationDate>
+  <date>1373294013000</date>
+  <contentUpdateDate>1373294013000</contentUpdateDate>
+  <version>1.1</version>
+  <title/>
+  <defaultTemplate/>
+  <validationScript/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>false</hidden>
+  <content>{{velocity}}
+/*
+This page is used to generate signature objects when called via an Ajax request
+*/
+#set($signatureClass = 'SignedScripts.SignatureClass')
+#set($page = $request.page)
+#set($targetDoc = $xwiki.getDocument($page))
+#set($contents = [])
+#set($ids =  $request.getParameterNames())
+#set($targetDoc = $xwiki.getDocument("$request.currentDoc"))
+#foreach($id in $ids)
+  #if($id != 'currentDoc')
+    #set($content = $request.getParameter($id))
+    #set($user = $context.getUser().toString())
+    #set($signature = $services.signedScripts.computeSignature("$content", 'test'))
+    #set($signatureObject = $targetDoc.getObject($signatureClass, "id", $id))
+    #if(!$signatureObject)
+      #set($n = $targetDoc.createNewObject($signatureClass))
+      #set($signatureObject = $targetDoc.getObject($signatureClass, $n))
+      $signatureObject.set('id', $id)
+    #end
+    $signatureObject.set('signature', $signature)
+    $signatureObject.set('certificate', 'test')
+    $signatureObject.set('author', $user)
+  #end
+#end
+$targetDoc.save()
+{{/velocity}}</content>
+</xwikidoc>

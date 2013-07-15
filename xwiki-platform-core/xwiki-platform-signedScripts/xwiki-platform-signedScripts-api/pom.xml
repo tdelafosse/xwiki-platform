@@ -30,9 +30,9 @@
     <version>5.2-SNAPSHOT</version>
   </parent>
   <artifactId>xwiki-platform-signedScripts-api</artifactId>
-  <name>XWiki Platform - Configuration - API</name>
+  <name>XWiki Platform - Signed Scripts - API</name>
   <packaging>jar</packaging>
-  <description>XWiki Platform - Configuration - API</description>
+  <description>XWiki Platform - Signed Scripts - API</description>
   <dependencies>
     <dependency>
       <groupId>org.xwiki.commons</groupId>
