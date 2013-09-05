@@ -27,7 +27,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
-import org.apache.xerces.impl.dv.util.Base64;
+import org.apache.commons.codec.binary.Base64; 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.context.Execution;
@@ -126,7 +126,7 @@ public class DefaultSignatureVerifier implements SignatureVerifier
     protected boolean verifyPureSignature(String signature, String content, String filename)
     {
         logger.debug("Found signature object");
-        byte[] decodedSignature = Base64.decode(signature);
+        byte[] decodedSignature = Base64.decodeBase64(signature);
         try {
             PublicKey publicKey = keyHandler.getPublicKey(filename);
             Signature verifySignature = Signature.getInstance("SHA256withRSA");

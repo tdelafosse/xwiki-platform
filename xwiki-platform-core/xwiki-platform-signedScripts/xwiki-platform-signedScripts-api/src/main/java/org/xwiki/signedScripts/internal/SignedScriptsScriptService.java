@@ -19,6 +19,8 @@
  */
 package org.xwiki.signedScripts.internal;
 
+import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
@@ -26,6 +28,7 @@ import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.signedScripts.KeyPairHandler;
+import org.xwiki.signedScripts.ScriptParser;
 import org.xwiki.signedScripts.SignatureGenerator;
 import org.xwiki.signedScripts.SignatureVerifier;
 import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
@@ -57,6 +60,10 @@ public class SignedScriptsScriptService implements ScriptService
     @Inject
     private SignedScriptsAuthorizationContext authorizationContext;
     
+    /** Script Parser. */
+    @Inject 
+    private ScriptParser scriptParser;
+    
     /**
      * Compute signature.
      * 
@@ -77,5 +84,15 @@ public class SignedScriptsScriptService implements ScriptService
     public void generateKeyPair(String filename)
     {
         keyPairHandler.generateKeyPair(filename);
+    }
+    
+    /**
+     * Finding scripts.
+     * 
+     * @return Map of the scripts to sign
+     */
+    public Map<String, String> findScripts()
+    {
+        return scriptParser.findScripts();
     }
 }

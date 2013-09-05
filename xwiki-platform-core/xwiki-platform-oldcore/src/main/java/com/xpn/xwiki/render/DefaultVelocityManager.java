@@ -29,6 +29,7 @@ import javax.script.ScriptContext;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.runtime.RuntimeConstants;
+import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.context.Execution;
 import org.xwiki.script.ScriptContextManager;
@@ -75,6 +76,9 @@ public class DefaultVelocityManager implements VelocityManager
      */
     @Inject
     private ScriptContextManager scriptContextManager;
+    
+    @Inject
+    private Logger logger;
 
     @Override
     @SuppressWarnings("unchecked")

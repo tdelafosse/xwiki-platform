@@ -54,6 +54,16 @@
       <artifactId>xwiki-commons-properties</artifactId>
       <version>${commons.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.xwiki.rendering</groupId>
+      <artifactId>xwiki-rendering-transformation-macro</artifactId>
+      <version>${rendering.version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.xwiki.platform</groupId>
+    	<artifactId>xwiki-platform-rendering-macro-script</artifactId>
+    	<version>${project.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
