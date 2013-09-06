@@ -76,9 +76,6 @@ public class DefaultVelocityManager implements VelocityManager
      */
     @Inject
     private ScriptContextManager scriptContextManager;
-    
-    @Inject
-    private Logger logger;
 
     @Override
     @SuppressWarnings("unchecked")

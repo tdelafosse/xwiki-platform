@@ -60,9 +60,6 @@ public class DefaultScriptParser implements ScriptParser
      */
     private static final String ID = "id";
     
-    private static final DocumentReference SIGNATURE_CLASS = 
-        new DocumentReference("wiki", "SignedScripts", "SignatureClass");
-    
     /**
      * Logger.
      */

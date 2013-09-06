@@ -29,14 +29,9 @@
     <artifactId>xwiki-platform-rendering-macros</artifactId>
     <version>5.2-SNAPSHOT</version>
   </parent>
-  <artifactId>xwiki-platform-rendering-macro-script</artifactId>
-  <name>XWiki Platform - Rendering - Macro - Script</name>
-  <description>Executes a script implementing the Java Scripting API (JSR-223)</description>
-  <properties>
-    <xwiki.jacoco.instructionRatio>56.66</xwiki.jacoco.instructionRatio>
-    <!-- Name to display by the Extension Manager -->
-    <xwiki.extension.name>Script Macro</xwiki.extension.name>
-  </properties>
+  <artifactId>xwiki-platform-rendering-macro-signable</artifactId>
+  <name>XWiki Platform - Rendering - Macro - Signable</name>
+  <description>Represents macros that can be signed and in particular the global sign macro</description>
   <dependencies>
     <dependency>
       <groupId>org.xwiki.commons</groupId>
@@ -53,71 +48,39 @@
       <artifactId>xwiki-platform-signedScripts-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- Testing dependencies -->
     <dependency>
-      <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-classloader-api</artifactId>
-      <version>${commons.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-classloader-protocol-jar</artifactId>
-      <version>${commons.version}</version>
-      <scope>runtime</scope>
+      <groupId>org.xwiki.rendering</groupId>
+      <artifactId>xwiki-rendering-test</artifactId>
+      <version>${rendering.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-classloader-protocol-attachmentjar</artifactId>
+      <artifactId>xwiki-platform-rendering-macro-script</artifactId>
       <version>${project.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-observation-api</artifactId>
-      <version>${commons.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.xwiki.commons</groupId>
-      <artifactId>xwiki-commons-component-observation</artifactId>
-      <version>${commons.version}</version>
-      <scope>runtime</scope>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.xwiki.platform</groupId>
-      <artifactId>xwiki-platform-rendering-macro-signable</artifactId>
+      <artifactId>xwiki-platform-rendering-macro-groovy</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
-    <!-- Test dependencies -->
     <dependency>
       <groupId>org.xwiki.commons</groupId>
       <artifactId>xwiki-commons-observation-local</artifactId>
       <version>${commons.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.xwiki.rendering</groupId>
-      <artifactId>xwiki-rendering-transformation-macro</artifactId>
-      <version>${rendering.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
       <plugin>
+        <!-- Apply the Checkstyle configurations defined in the top level pom.xml file -->
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>test-jar</goal>
-            </goals>
-            <configuration>
-              <includes>
-                <include>**/ScriptMockSetup*.class</include>
-              </includes>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

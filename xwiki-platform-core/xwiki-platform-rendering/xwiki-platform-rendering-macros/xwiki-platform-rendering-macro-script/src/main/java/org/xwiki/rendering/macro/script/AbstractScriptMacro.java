@@ -35,10 +35,10 @@ import org.xwiki.observation.ObservationManager;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
 import org.xwiki.rendering.listener.MetaData;
-import org.xwiki.rendering.macro.AbstractMacro;
 import org.xwiki.rendering.macro.MacroContentParser;
 import org.xwiki.rendering.macro.MacroExecutionException;
 import org.xwiki.rendering.macro.descriptor.ContentDescriptor;
+import org.xwiki.rendering.macro.signable.AbstractSignableMacro;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.rendering.transformation.MacroTransformationContext;
@@ -61,7 +61,7 @@ import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
  * @version $Id$
  * @since 1.7M3
  */
-public abstract class AbstractScriptMacro<P extends ScriptMacroParameters> extends AbstractMacro<P> implements
+public abstract class AbstractScriptMacro<P extends ScriptMacroParameters> extends AbstractSignableMacro<P> implements
     ScriptMacro
 {
     /**

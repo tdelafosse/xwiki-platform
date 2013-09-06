@@ -20,6 +20,7 @@
 package org.xwiki.rendering.macro.script;
 
 import org.xwiki.properties.annotation.PropertyDescription;
+import org.xwiki.rendering.macro.signable.SignableMacroParameters;
 
 /**
  * Parameters for the {@link AbstractScriptMacro} Macro.
@@ -27,7 +28,7 @@ import org.xwiki.properties.annotation.PropertyDescription;
  * @version $Id$
  * @since 1.7M3
  */
-public class ScriptMacroParameters
+public class ScriptMacroParameters extends SignableMacroParameters
 {
     /**
      * @see #setOutput(boolean)
@@ -43,11 +44,6 @@ public class ScriptMacroParameters
      * @see #getJars()
      */
     private String jarURLsAsString;
-
-    /**
-     * Id.
-     */
-    private String id = "";
     
     /**
      * @param output indicate the output result has to be inserted back in the document.
@@ -104,22 +100,5 @@ public class ScriptMacroParameters
     public String getJars()
     {
         return this.jarURLsAsString;
-    }
-    
-    /**
-     * @param id Id of the macro.
-     */
-    @PropertyDescription("Id of the macro.")
-    public void setId(String id)
-    {
-        this.id = id;
-    }
-    
-    /**
-     * @return the id of the macro.
-     */
-    public String getId()
-    {
-        return this.id;
     }
 }
