@@ -75,7 +75,8 @@ public class ScriptMockSetup
         
         this.sVerifier = cm.registerMockComponent(mockery, SignatureVerifier.class);
         mockery.checking(new Expectations() {{
-            allowing(sVerifier).verifySignature(with(any(String.class)), with(any(String.class)), with(any(String.class)));
+            allowing(sVerifier).verifyScriptSignature(
+                with(any(String.class)), with(any(String.class)), with(any(String.class)), with(any(boolean.class)));
             will(returnValue(true));
         }});
     }

@@ -58,9 +58,9 @@ public class DefaultSignedScriptsAuthorizationContext implements SignedScriptsAu
             executionContext.newProperty(SignedScriptsAuthorizationContext.EXECUTION_CONTEXT_KEY)
                 .makeFinal().inherited().initial(new Stack<DocumentReference>()).declare();
         }
-        if (!executionContext.hasProperty(SignedScriptsAuthorizationContext.EXECUTION_CONTEXT_DOC_KEY)) {
-            executionContext.newProperty(SignedScriptsAuthorizationContext.EXECUTION_CONTEXT_DOC_KEY)
-                .makeFinal().inherited().initial(new Stack<DocumentReference>()).declare();
+        if (!executionContext.hasProperty(SignedScriptsAuthorizationContext.EXECUTION_CONTEXT_SIGN_MACRO_KEY)) {
+            executionContext.newProperty(SignedScriptsAuthorizationContext.EXECUTION_CONTEXT_SIGN_MACRO_KEY)
+                .makeFinal().inherited().initial(new Stack<MacroSignEntry>()).declare();
         }
     }
     
@@ -96,6 +96,35 @@ public class DefaultSignedScriptsAuthorizationContext implements SignedScriptsAu
         return !stackEntry.isEmpty();
     }
     
+    @Override
+    public void enteringSignMacro(DocumentReference docRef, DocumentReference userRef)
+    {
+        Stack<MacroSignEntry> signMacroStack = getSignMacroStackEntry();
+        MacroSignEntry entry = new MacroSignEntry(docRef, userRef);
+        signMacroStack.push(entry);
+    }
+    
+    @Override
+    public void exitingSignMacro()
+    {
+        Stack<MacroSignEntry> signMacroStack = getSignMacroStackEntry();
+        signMacroStack.pop();
+    }
+    
+    @Override
+    public MacroSignEntry getLastMacroSign()
+    {
+        Stack<MacroSignEntry> signMacroStack = getSignMacroStackEntry();
+        return signMacroStack.peek();
+    }
+    
+    @Override
+    public boolean isInsideMacroSign()
+    {
+        Stack<MacroSignEntry> signMacroStack = getSignMacroStackEntry();
+        return !signMacroStack.isEmpty();
+    }
+    
     /**
      * Retrieving the stack entry.
      * 
@@ -112,9 +141,9 @@ public class DefaultSignedScriptsAuthorizationContext implements SignedScriptsAu
      * 
      * @return the document stack entry.
      */
-    private Stack<DocumentReference> getDocStackEntry()
+    private Stack<MacroSignEntry> getSignMacroStackEntry()
     {
-        return (Stack<DocumentReference>) execution.getContext().getProperty(
-            SignedScriptsAuthorizationContext.EXECUTION_CONTEXT_DOC_KEY);
+        return (Stack<MacroSignEntry>) execution.getContext().getProperty(
+            SignedScriptsAuthorizationContext.EXECUTION_CONTEXT_SIGN_MACRO_KEY);
     }
 }

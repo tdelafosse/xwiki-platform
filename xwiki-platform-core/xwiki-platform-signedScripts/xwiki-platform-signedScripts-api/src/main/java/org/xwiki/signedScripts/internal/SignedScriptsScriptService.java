@@ -26,6 +26,7 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.xwiki.component.annotation.Component;
+import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.script.service.ScriptService;
 import org.xwiki.signedScripts.KeyPairHandler;
 import org.xwiki.signedScripts.ScriptParser;
@@ -89,10 +90,24 @@ public class SignedScriptsScriptService implements ScriptService
     /**
      * Finding scripts.
      * 
+     * @param currentDocRef Reference to the document to find scripts in
      * @return Map of the scripts to sign
      */
-    public Map<String, String> findScripts()
+    public Map<String, String> findScripts(DocumentReference currentDocRef)
     {
-        return scriptParser.findScripts();
+        return scriptParser.findScripts(currentDocRef);
+    }
+    
+    /**
+     * Finding scripts.
+     * 
+     * @param content Content to find scripts in
+     * @param syntaxId Id of the syntax of the content
+     * @param docRef Reference to the document containing the scripts
+     * @return Map of the scripts to sign
+     */
+    public Map<String, String> findScripts(String content, String syntaxId, DocumentReference docRef)
+    {
+        return scriptParser.findScripts(content, syntaxId, docRef);
     }
 }

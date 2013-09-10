@@ -64,6 +64,11 @@
     	<artifactId>xwiki-platform-rendering-macro-script</artifactId>
     	<version>${project.version}</version>
     </dependency>
+    <dependency>
+    	<groupId>org.xwiki.platform</groupId>
+    	<artifactId>xwiki-platform-rendering-macro-signable</artifactId>
+    	<version>${project.version}</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

@@ -27,7 +27,6 @@ import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
-import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.listener.MetaData;
 import org.xwiki.rendering.macro.MacroContentParser;
@@ -90,18 +89,21 @@ public class SignMacro extends AbstractSignableMacro<SignableMacroParameters>
         logger.warn("Successfully entered sign macro");
         //If the content comes from another document, we should find this "source" in the context.
         String source;
-        DocumentReference guestRef = new DocumentReference("xwiki", "XWiki", "Guest");
+        boolean isSigned = false;
         if (context.getXDOM().getMetaData().getMetaData().containsKey(MetaData.SOURCE)) {
             source = context.getXDOM().getMetaData().getMetaData(MetaData.SOURCE).toString();
         } else {
             source = "";
         }
         String id = parameters.getId();
-        if (id == null || !signatureVerifier.verifySignature(id, content, source)) {
-            authorizationContext.pushEntry(guestRef);
+        if (id != null) {
+            isSigned = signatureVerifier.verifySignMacroSignature(id, content, source, true);
+            logger.warn("The macro block is signed ? " + isSigned);
         }
         List<Block> blocks = this.contentParser.parse(content, context, true, context.isInline()).getChildren();
-        authorizationContext.popEntry();
+        if (isSigned) {
+            authorizationContext.exitingSignMacro();
+        }
         return blocks;
     }
 }

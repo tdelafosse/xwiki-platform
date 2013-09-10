@@ -26,11 +26,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.xwiki.component.annotation.Component;
+import org.xwiki.component.manager.ComponentManager;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.rendering.block.Block;
 import org.xwiki.rendering.block.MacroBlock;
@@ -39,7 +39,7 @@ import org.xwiki.rendering.block.match.ClassBlockMatcher;
 import org.xwiki.rendering.macro.Macro;
 import org.xwiki.rendering.macro.MacroId;
 import org.xwiki.rendering.macro.MacroManager;
-import org.xwiki.rendering.macro.script.AbstractScriptMacro;
+import org.xwiki.rendering.macro.signable.AbstractSignableMacro;
 import org.xwiki.rendering.parser.ParseException;
 import org.xwiki.rendering.parser.Parser;
 import org.xwiki.signedScripts.ScriptParser;
@@ -67,13 +67,6 @@ public class DefaultScriptParser implements ScriptParser
     private Logger logger;
     
     /**
-     * Parser to find macro in the document content.
-     */
-    @Inject
-    @Named("xwiki/2.1")
-    private Parser parser;
-    
-    /**
      * Used to know whether a given script has already a correct signature or not.
      */
     @Inject
@@ -91,30 +84,47 @@ public class DefaultScriptParser implements ScriptParser
     @Inject
     private MacroManager macroManager;
     
+    @Inject
+    private ComponentManager componentManager;
+    
     @Override
-    public Map<String, String> findScripts()
+    public Map<String, String> findScripts(DocumentReference currentDocRef)
     {
-        Map<String, String> scriptsFound = new HashMap<String, String>();
+     // Let's get the content of the actual document, where we should look for scripts to sign
         try {
-            DocumentReference currentDocRef = documentAccessBridge.getCurrentDocumentReference();
-            // Let's get the content of the actual document, where we should look for scripts to sign
             String content = documentAccessBridge.getDocument(currentDocRef).getContent();
-            logger.warn("Current content is : " + content);
+            String syntaxId = documentAccessBridge.getDocument(currentDocRef).getSyntax().toIdString();
+            return findScripts(content, syntaxId, currentDocRef);
+        } catch (Exception e) {
+            logger.warn("Failed to get content : " + e.toString());
+            return null;
+        }
+    }
+    
+    @Override
+    public Map<String, String> findScripts(String content, String syntaxId, DocumentReference docRef)
+    {
+        //logger.warn("Content is : " + content);
+        Map<String, String> scriptsFound = new HashMap<String, String>();
+        String blockContent;
+        try {
+            Parser parser = componentManager.getInstance(Parser.class, syntaxId);
             XDOM xdom = parser.parse(new StringReader(content));
             List<MacroBlock> macroBlocks = 
                 xdom.getBlocks(new ClassBlockMatcher(MacroBlock.class), Block.Axes.DESCENDANT);
-            logger.warn("We have " + macroBlocks.size() + " macro blocks");
             // For each macro in the content, let's find the ones corresponding to scripts
             for (MacroBlock block : macroBlocks) {
-                if (couldBeSigned(block)) {
-                    scriptsFound.put(block.getParameter(ID), block.getContent());
+                blockContent = block.getContent();
+                if (couldBeSigned(block, docRef)) {
+                    scriptsFound.put(block.getParameter(ID), blockContent);
                 }
             }
         } catch (ParseException e) {
             logger.warn("Failed to parse content : " + e.toString());
         } catch (Exception e) {
-            logger.warn("Failed to get content : " + e.toString());
+            logger.warn("Got the following exception : " + e.toString());
         }
+        logger.warn("Scripts found : " + scriptsFound.values());
         return scriptsFound;
     }
     
@@ -124,18 +134,21 @@ public class DefaultScriptParser implements ScriptParser
      * @param block The block containing the script
      * @return true if we should propose the user to sign this script
      */
-    private boolean couldBeSigned(MacroBlock block)
+    private boolean couldBeSigned(MacroBlock block, DocumentReference docRef)
     {
         try {
             // First let's verify that this macro is a script macro and that it contains an id parameter.
             Macro< ? > macro = this.macroManager.getMacro(new MacroId(block.getId()));
-            if (macro instanceof AbstractScriptMacro && block.getParameters().containsKey(ID)) {
-                DocumentReference currentDocRef = documentAccessBridge.getCurrentDocumentReference();
+            if (macro instanceof AbstractSignableMacro && block.getParameters().containsKey(ID)) {
                 String id = block.getParameter(ID);
                 String content = block.getContent();
                 // If the script is already signed, no need to ask to sign it again
                 // TODO : We should be able to resign a script if it's someone else who signed it.
-                return !signatureVerifier.verifySignature(id, content, currentDocRef.toString());
+                DocumentReference authorRef = signatureVerifier.getSigner(id, content, docRef.toString());
+                DocumentReference currentUser = documentAccessBridge.getCurrentUserReference();
+                if (null != authorRef || !currentUser.equals(authorRef)) {
+                    return true;
+                }
             }
             return false;
         } catch (Exception e) {

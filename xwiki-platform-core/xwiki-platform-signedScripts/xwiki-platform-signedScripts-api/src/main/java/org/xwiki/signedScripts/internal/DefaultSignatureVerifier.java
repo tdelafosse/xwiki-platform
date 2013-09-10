@@ -47,6 +47,30 @@ import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
 @Singleton
 public class DefaultSignatureVerifier implements SignatureVerifier
 {
+    /** Separator. */
+    private static final String SEPARATOR = " : ";
+    
+    /** String indicating that we are checking the signature of a script. */
+    private static final String SCRIPT_MODE = "script";
+    
+    /** String indicating that we are checking the signature of a sign macro. */
+    private static final String SIGN_MACRO_MODE = "signMacro";
+    
+    /** Name of the property where the id is stored. */
+    private static final String ID_PROP = "id";
+    
+    /** Name of the property where the name of the certificate is stored. */
+    private static final String CERTIFICATE_PROP = "certificate";
+    
+    /** Name of the property where the signature is stored. */
+    private static final String SIGNATURE_PROP = "signature";
+    
+    /** Name of the property where the author of the signature is stored. */
+    private static final String AUTHOR_PROP = "author";
+    
+    /** Signature class. */
+    private final DocumentReference classRef = new DocumentReference("xwiki", "SignedScripts", "SignatureClass");
+    
     /** Logger. */
     @Inject
     private Logger logger;
@@ -79,7 +103,49 @@ public class DefaultSignatureVerifier implements SignatureVerifier
     private DocumentReferenceResolver<String> resolver;
     
     @Override
-    public boolean verifySignature(String id, String content, String contentDoc)
+    public DocumentReference getSigner(String id, String content, String contentDoc)
+    {
+        try {
+            // Reference to the document containing the script.
+            DocumentReference scriptDoc;
+            if (contentDoc.equals("")) {
+                scriptDoc = documentAccessBridge.getCurrentDocumentReference();
+            } else {
+                scriptDoc = resolver.resolve(contentDoc);
+            }
+            int n = documentAccessBridge.getObjectNumber(scriptDoc, classRef, ID_PROP, id);
+            // If there is no corresponding object, it means the script hasn't been signed.
+            if (n == -1) {
+                return null;
+            }
+            String certificate = documentAccessBridge.getProperty(scriptDoc, classRef, n, CERTIFICATE_PROP).toString();
+            String signature = documentAccessBridge.getProperty(scriptDoc, classRef, n, SIGNATURE_PROP).toString();
+            String author = documentAccessBridge.getProperty(scriptDoc, classRef, n, AUTHOR_PROP).toString();
+            DocumentReference authorRef = resolver.resolve(author);
+            String signedContent = authorRef.toString() + SEPARATOR + content;
+            if (verifyPureSignature(signature, signedContent, certificate)) {
+                return authorRef;
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    @Override
+    public boolean verifyScriptSignature(String id, String content, String contentDoc, boolean putInAuthContext)
+    {
+        return verifySignature(id, content, contentDoc, SCRIPT_MODE, putInAuthContext);
+    }
+    
+    @Override
+    public boolean verifySignMacroSignature(String id, String content, String contentDoc, boolean putInAuthContext)
+    {
+        return verifySignature(id, content, contentDoc, SIGN_MACRO_MODE, putInAuthContext);
+    }
+    
+    protected boolean verifySignature(
+        String id, String content, String contentDoc, String mode, boolean putInAuthContext)
     {
         try {
             logger.debug("Verifying signature for content : " + content);
@@ -91,20 +157,26 @@ public class DefaultSignatureVerifier implements SignatureVerifier
                 scriptDoc = resolver.resolve(contentDoc);
             }
             logger.debug("Content doc is : " + scriptDoc.toString());
-            DocumentReference classRef = new DocumentReference("xwiki", "SignedScripts", "SignatureClass");
-            int n = documentAccessBridge.getObjectNumber(scriptDoc, classRef, "id", id);
+            int n = documentAccessBridge.getObjectNumber(scriptDoc, classRef, ID_PROP, id);
             // If there is no corresponding object, it means the script hasn't been signed.
             if (n == -1) {
                 return false;
             }
-            String certificate = documentAccessBridge.getProperty(scriptDoc, classRef, n, "certificate").toString();
-            String signature = documentAccessBridge.getProperty(scriptDoc, classRef, n, "signature").toString();
-            String author = documentAccessBridge.getProperty(scriptDoc, classRef, n, "author").toString();
+            String certificate = documentAccessBridge.getProperty(scriptDoc, classRef, n, CERTIFICATE_PROP).toString();
+            String signature = documentAccessBridge.getProperty(scriptDoc, classRef, n, SIGNATURE_PROP).toString();
+            String author = documentAccessBridge.getProperty(scriptDoc, classRef, n, AUTHOR_PROP).toString();
             DocumentReference authorRef = resolver.resolve(author);
             logger.debug("Author ref is : " + authorRef.toString());
-            String signedContent = authorRef.toString() + " : " + content;
+            String signedContent = authorRef.toString() + SEPARATOR + content;
             if (verifyPureSignature(signature, signedContent, certificate)) {
-                authorizationContext.pushEntry(authorRef);
+                if (!putInAuthContext) {
+                    return true;
+                }
+                if (SCRIPT_MODE == mode) {
+                    authorizationContext.pushEntry(authorRef);
+                } else if (SIGN_MACRO_MODE == mode) {
+                    authorizationContext.enteringSignMacro(scriptDoc, authorRef);
+                }
                 return true;
             } else {
                 logger.warn("The signature is incorrect !");

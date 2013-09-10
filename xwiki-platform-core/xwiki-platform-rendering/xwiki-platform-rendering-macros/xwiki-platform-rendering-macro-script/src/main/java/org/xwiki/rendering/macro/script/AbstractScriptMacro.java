@@ -240,7 +240,7 @@ public abstract class AbstractScriptMacro<P extends ScriptMacroParameters> exten
                 //If this script has an id, it means it could have been signed.
                 //If there is a valid signature associated, the script author is pushed in the authorization context
                 //(this is made inside the verifySignature method), else we push guest user in the context.
-                if (id == null || !signatureVerifier.verifySignature(id, content, source)) {
+                if (id == null || !signatureVerifier.verifyScriptSignature(id, content, source, true)) {
                     authorizationContext.pushEntry(guestRef);
                 }
                 // send evaluation starts event

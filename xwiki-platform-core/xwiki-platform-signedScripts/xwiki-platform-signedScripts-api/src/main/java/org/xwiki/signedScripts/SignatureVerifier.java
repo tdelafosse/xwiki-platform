@@ -21,22 +21,46 @@
 package org.xwiki.signedScripts;
 
 import org.xwiki.component.annotation.Role;
+import org.xwiki.model.reference.DocumentReference;
 
 /**
  * This component is used to verify signatures. 
+ * 
  * @version $Id$
- * @since 5.1RC1
+ * @since 5.3
  */
 @Role
 public interface SignatureVerifier
 {   
     /**
-     * Verifying the signature of the passed content.
+     * Get the user who signed the passed element.
+     * 
+     * @param id Id of the signed element
+     * @param content Content signed
+     * @param contentDoc Document containing the content
+     * @return the user who signed the content passed if the signature is valid. Returns null otherwise.
+     */
+    DocumentReference getSigner(String id, String content, String contentDoc);
+    
+    /**
+     * Verify the signature of the passed content.
      * 
      * @param id Id of the scripting macro
      * @param content Content of the macro
      * @param contentDoc Document containing the script and against where the signature objects are stored
+     * @param pushInAuthorizationContext true if the corresponding object should be put in the authorization context 
+     * @return true if this script has been correctly signed
+     */
+    boolean verifyScriptSignature(String id, String content, String contentDoc, boolean pushInAuthorizationContext);
+    
+    /**
+     * Verify the signature of the passed content.
+     * 
+     * @param id Id of the sign macro
+     * @param content Content of the macro
+     * @param contentDoc Document containing the macro and against where the signature objects are stored
+     * @param pushInAuthorizationContext true if the corresponding object should be put in the authorization context 
      * @return true if this macro has been correctly signed
      */
-    boolean verifySignature(String id, String content, String contentDoc);
+    boolean verifySignMacroSignature(String id, String content, String contentDoc, boolean pushInAuthorizationContext);
 }

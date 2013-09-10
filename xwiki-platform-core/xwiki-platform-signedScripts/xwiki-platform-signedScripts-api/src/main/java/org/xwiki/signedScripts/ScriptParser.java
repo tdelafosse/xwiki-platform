@@ -23,6 +23,7 @@ package org.xwiki.signedScripts;
 import java.util.Map;
 
 import org.xwiki.component.annotation.Role;
+import org.xwiki.model.reference.DocumentReference;
 
 /**
  * This component is used to parse the DOM for finding scripts to sign.
@@ -35,7 +36,19 @@ public interface ScriptParser
     /**
      * Find the scripts to sign from a page content.
      * 
+     * @param currentDocRef Reference of the document to find scripts in
      * @return A map containing the id and the content of every script to sign 
      */
-    Map<String, String> findScripts();
+    Map<String, String> findScripts(DocumentReference currentDocRef);
+    
+    /**
+     * Find the scripts to sign from a page content.
+     * 
+     * @param content Content to find scripts in
+     * @param syntaxId Id of the content syntax
+     * @param docRef Reference to the document containing the scripts and their signatures
+     * @return A map containing the id and the content of every script to sign 
+     */
+    Map<String, String> findScripts(String content, String syntaxId, DocumentReference docRef);
+    
 }
