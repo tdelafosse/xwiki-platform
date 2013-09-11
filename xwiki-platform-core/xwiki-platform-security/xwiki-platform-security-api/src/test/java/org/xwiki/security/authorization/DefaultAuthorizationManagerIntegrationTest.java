@@ -59,6 +59,7 @@ import org.xwiki.security.authorization.testwikis.TestUserDocument;
 import org.xwiki.security.authorization.testwikis.TestWiki;
 import org.xwiki.security.internal.UserBridge;
 import org.xwiki.security.internal.XWikiBridge;
+import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
 import org.xwiki.test.LogRule;
 import org.xwiki.test.annotation.BeforeComponent;
 import org.xwiki.test.annotation.ComponentList;
@@ -111,6 +112,9 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
 
     /** Mocked cache */
     private TestCache<Object> cache;
+    
+    /** Mocked Signed Scripts Authorization Context */
+    private SignedScriptsAuthorizationContext authorizationContext;
 
     /** Factory for security reference */
     private SecurityReferenceFactory securityReferenceFactory;
@@ -125,6 +129,7 @@ public class DefaultAuthorizationManagerIntegrationTest extends AbstractAuthoriz
         userBridge = componentManager.registerMockComponent(UserBridge.class);
         securityEntryReader = componentManager.registerMockComponent(SecurityEntryReader.class);
         securityCacheRulesInvalidator = componentManager.registerMockComponent(SecurityCacheRulesInvalidator.class);
+        authorizationContext = componentManager.registerMockComponent(SignedScriptsAuthorizationContext.class);
     }
 
     @Before

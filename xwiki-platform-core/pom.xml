@@ -365,6 +365,12 @@
           -->
           <ignored>
             <!-- Remove the following ignores after we release the current version as final -->
+            <difference>
+              <differenceType>7012</differenceType>
+              <className>org/xwiki/security/authorization/AuthorizationManager</className>
+              <method>boolean hasProgrammingRights(org.xwiki.model.reference.EntityReference, org.xwiki.model.reference.DocumentReference)</method>
+              <justification>Adding this method as signed scripts completely change the way PR are evaluated</justification>
+            </difference>
           </ignored>
           <excludes>
             <exclude>**/internal/**</exclude>

@@ -75,6 +75,15 @@ public interface AuthorizationManager
     boolean hasAccess(Right right, DocumentReference userReference, EntityReference entityReference);
 
     /**
+     * Verifies if the current code / script executed should be granted Programming Rights.
+     * 
+     * @param entityReference the entity on which to check the right
+     * @param docReference the document the currently executed code comes from
+     * @return {@code true} if the code should be granted PR, {@code false} otherwise
+     */
+    boolean hasProgrammingRights(EntityReference entityReference, DocumentReference docReference);
+    
+    /**
      * Register a new custom {@link Right}.
      *
      * @param rightDescription the full description of the new {@link Right}
@@ -83,4 +92,5 @@ public interface AuthorizationManager
      * the same right does not cause an exception and return the existing right.
      */
     Right register(RightDescription rightDescription) throws UnableToRegisterRightException;
+    
 }

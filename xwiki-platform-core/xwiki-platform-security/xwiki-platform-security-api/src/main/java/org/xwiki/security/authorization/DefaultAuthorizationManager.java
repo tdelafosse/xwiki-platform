@@ -34,6 +34,7 @@ import org.xwiki.security.UserSecurityReference;
 import org.xwiki.security.authorization.cache.SecurityCache;
 import org.xwiki.security.authorization.cache.SecurityCacheLoader;
 import org.xwiki.security.internal.XWikiBridge;
+import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
 
 /**
  * Default implementation of the {@link AuthorizationManager}.
@@ -64,6 +65,10 @@ public class DefaultAuthorizationManager implements AuthorizationManager
     /** Serializer. */
     @Inject
     private EntityReferenceSerializer<String> entityReferenceSerializer;
+    
+    /** The signed scripts authorization context. */
+    @Inject
+    private SignedScriptsAuthorizationContext authorizationContext;
 
     /** XWiki bridge to check for read only wiki. */
     @Inject
@@ -161,6 +166,28 @@ public class DefaultAuthorizationManager implements AuthorizationManager
             logAccess(access, userReference, entityReference, right, info, true);
         }
         return access == RuleState.ALLOW;
+    }
+    
+    @Override
+    public boolean hasProgrammingRights(EntityReference entityReference, DocumentReference docReference)
+    {
+        // Grant PR if the current script has been signed, or if we are inside a valid "sign" macro.
+        if (authorizationContext.isInsideMacroSign()) {
+            DocumentReference signMacroDocRef = authorizationContext.getLastMacroSign().getContainingDocument();
+            // If we entered a sign macro in the current document, let's grant PR if the signing user has PR.
+            if (signMacroDocRef.equals(docReference)) {
+                DocumentReference userRef = authorizationContext.getLastMacroSign().getUser();
+                if (hasAccess(Right.PROGRAM, userRef, entityReference)) {
+                    return true;
+                }
+            }
+        }
+        // If we are not inside a valid "sign" macro, let's check if the current script has been signed.
+        if (authorizationContext.hasEntry()) {
+            DocumentReference userRef = authorizationContext.getLastEntry();
+            return hasAccess(Right.PROGRAM, userRef, entityReference);
+        }
+        return false;
     }
 
     @Override

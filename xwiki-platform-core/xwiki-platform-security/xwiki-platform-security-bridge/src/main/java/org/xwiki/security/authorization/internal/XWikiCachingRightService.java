@@ -32,7 +32,6 @@ import org.xwiki.security.authorization.AuthorizationManager;
 import org.xwiki.security.authorization.Right;
 import org.xwiki.security.internal.XWikiConstants;
 import org.xwiki.signedScripts.SignedScriptsAuthorizationContext;
-import org.xwiki.signedScripts.internal.MacroSignEntry;
 
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.XWikiException;
@@ -359,25 +358,9 @@ public class XWikiCachingRightService implements XWikiRightService
     public boolean hasProgrammingRights(XWikiContext context)
     {
         WikiReference wiki = new WikiReference(context.getDatabase());
+        DocumentReference docReference = context.getDoc().getDocumentReference();
         
-        // Grant PR if the current script has been signed, or if we are inside a valid "sign" macro.
-        if (authorizationContext.isInsideMacroSign()) {
-            MacroSignEntry entry = authorizationContext.getLastMacroSign();
-            DocumentReference signMacroDocRef = entry.getContainingDocument();
-            // If we entered a sign macro in the current document, let's grant PR if the signing user has PR.
-            if (signMacroDocRef.equals(context.getDoc().getDocumentReference())) {
-                DocumentReference userRef = entry.getUser();
-                if (authorizationManager.hasAccess(Right.PROGRAM, userRef, wiki)) {
-                    return true;
-                }
-            }
-        }
-        // If we are not inside a valid "sign" macro, let's check if the current script has been signed.
-        if (authorizationContext.hasEntry()) {
-            DocumentReference userRef = authorizationContext.getLastEntry();
-            return authorizationManager.hasAccess(Right.PROGRAM, userRef, wiki);
-        }
-        return false;
+        return authorizationManager.hasProgrammingRights(wiki, docReference);
     }
 
     @Override
