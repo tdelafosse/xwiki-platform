@@ -204,10 +204,10 @@ public class DefaultSignatureVerifier implements SignatureVerifier
             Signature verifySignature = Signature.getInstance("SHA256withRSA");
             verifySignature.initVerify(publicKey);  
 
-            //update signature with signature data.  
+            // Update signature with signature data.  
             verifySignature.update(content.getBytes());  
 
-            //verify signature  
+            // Verify signature  
             return verifySignature.verify(decodedSignature);
         } catch (Exception e) {
             logger.warn("An exception occured while trying to verify signature");
