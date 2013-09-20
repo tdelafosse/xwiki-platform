@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xwikidoc>
+  <web>SignedScripts</web>
+  <name>Translations</name>
+  <language/>
+  <defaultLanguage/>
+  <translation>0</translation>
+  <parent>SignedScripts.Signing mechanism</parent>
+  <creator>xwiki:XWiki.Admin</creator>
+  <author>xwiki:XWiki.Admin</author>
+  <customClass/>
+  <contentAuthor>xwiki:XWiki.Admin</contentAuthor>
+  <creationDate>1378817071000</creationDate>
+  <date>1379007717000</date>
+  <contentUpdateDate>1379004793000</contentUpdateDate>
+  <version>1.1</version>
+  <title>Translations</title>
+  <defaultTemplate/>
+  <validationScript/>
+  <comment/>
+  <minorEdit>false</minorEdit>
+  <syntaxId>xwiki/2.1</syntaxId>
+  <hidden>false</hidden>
+  <object>
+    <class>
+      <name>XWiki.TranslationDocumentClass</name>
+      <customClass/>
+      <customMapping/>
+      <defaultViewSheet/>
+      <defaultEditSheet/>
+      <defaultWeb/>
+      <nameField/>
+      <validationScript/>
+      <scope>
+        <cache>0</cache>
+        <disabled>0</disabled>
+        <displayType>select</displayType>
+        <multiSelect>0</multiSelect>
+        <name>scope</name>
+        <number>1</number>
+        <prettyName>Scope</prettyName>
+        <relationalStorage>0</relationalStorage>
+        <separator> </separator>
+        <separators> ,|</separators>
+        <size>1</size>
+        <unmodifiable>0</unmodifiable>
+        <values>GLOBAL|WIKI|USER|ON_DEMAND</values>
+        <classType>com.xpn.xwiki.objects.classes.StaticListClass</classType>
+      </scope>
+    </class>
+    <name>SignedScripts.Translations</name>
+    <number>0</number>
+    <className>XWiki.TranslationDocumentClass</className>
+    <guid>f8c6ee44-ce95-4d0b-8f83-4ce446736b97</guid>
+    <property>
+      <scope>GLOBAL</scope>
+    </property>
+  </object>
+  <content>signedScripts.save.addingSignatures = Adding scripts signatures.
+
+signedScripts.migration.success = The content of the document {0} has successfully been signed.
+signedScripts.migration.failure = The content of the document {0} has already been signed.
+signedScripts.migration.choosePage = Choose a document to sign :
+signedScripts.migration.chooseSpace = Choose a space to sign :
+signedScripts.migration.signPage = Sign this document
+signedScripts.migration.signSpace = Sign all the documents from this space</content>
+</xwikidoc>
